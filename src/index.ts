@@ -1,4 +1,4 @@
-import { addStateMachine } from "./machine";
+import { addStateMachine, StateMachine } from "./machine";
 import type {
   TransitionDict,
   TransitionResult,
@@ -8,6 +8,7 @@ import type {
 
 export {
   addStateMachine,
+  StateMachine,
   TransitionDict,
   TransitionOptions,
   TransitionResult,

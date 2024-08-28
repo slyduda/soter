@@ -25,7 +25,7 @@ function evaluateCondition<T>(conditionFunction: any, context: T): boolean {
   }
 }
 
-class StateMachineWrapper<
+export class StateMachine<
   StateType,
   TriggerType extends string,
   T extends Stateful<StateType>
@@ -548,18 +548,18 @@ class StateMachineWrapper<
 }
 
 export function addStateMachine<
-  StateType extends string,
+  StateType,
   TriggerType extends string,
   T extends Stateful<StateType>
 >(
   context: T,
   blueprint: TransitionDict<StateType, TriggerType, T> | StateList<StateType>,
   options?: StateMachineOptions
-): T & StateMachineWrapper<StateType, TriggerType, T> {
-  const wrapper = new StateMachineWrapper(context, blueprint, options);
+): T & StateMachine<StateType, TriggerType, T> {
+  const wrapper = new StateMachine(context, blueprint, options);
 
   const proxy = new Proxy(
-    context as T & StateMachineWrapper<StateType, TriggerType, T>,
+    context as T & StateMachine<StateType, TriggerType, T>,
     {
       get(target, prop, receiver) {
         if (prop in wrapper) {
