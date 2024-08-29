@@ -1,4 +1,4 @@
-import { TransitionDict } from "../src";
+import { TransitionInstructions } from "../src";
 
 export type HeroState = "idle" | "sleeping";
 export type HeroTrigger = "patrol" | "sleep";
@@ -21,7 +21,11 @@ export class Hero {
   }
 }
 
-export const heroMachineDict: TransitionDict<HeroState, HeroTrigger, Hero> = {
+export const heroMachineDict: TransitionInstructions<
+  HeroState,
+  HeroTrigger,
+  Hero
+> = {
   patrol: [
     {
       origins: "idle",

@@ -8,8 +8,11 @@ export type ErrorName =
   | "OriginDisallowed"
   | "DestinationInvalid";
 
-type Effect<T> = keyof T; // Ensures only methods of T can be used as effects
-type Condition<T> = keyof T; // Ensures only methods of T can be used as conditions
+// Key of T ensures only methods of T can be used as effects
+// This req was dropped in 0.0.10 in order to allow the flexibility of simple examples
+// Transition failures from typeguards and exceptions will be how we handle string types
+type Effect<T> = keyof T | string;
+type Condition<T> = keyof T | string;
 
 export const isFunction = (obj: unknown): obj is CallableFunction =>
   obj instanceof Function;
@@ -75,7 +78,7 @@ export type TransitionResult<StateType, TriggerType extends string, T> = {
   context: T;
 };
 
-export type TransitionDict<StateType, TriggerType extends string, T> = {
+export type TransitionInstructions<StateType, TriggerType extends string, T> = {
   [K in TriggerType]:
     | Transition<StateType, TriggerType, T>
     | Transition<StateType, TriggerType, T>[];
@@ -91,6 +94,13 @@ export type StateMachineOptions = {
   throwExceptions?: boolean;
   strictOrigins?: boolean;
   conditionEvaluator?: <T>(conditionFunction: any, context: T) => boolean;
+};
+
+export type StateMachineConfig = {
+  verbosity: boolean;
+  throwExceptions: boolean;
+  strictOrigins: boolean;
+  conditionEvaluator: <T>(conditionFunction: any, context: T) => boolean;
 };
 
 export type TransitionOptions<T> = {

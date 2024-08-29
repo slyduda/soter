@@ -49,7 +49,11 @@ class Matter {
   }
 }
 
-const matterMachineDict: TransitionDict<MatterState, MatterTrigger, Matter> = {
+const matterMachineDict: TransitionInstructions<
+  MatterState,
+  MatterTrigger,
+  Matter
+> = {
   melt: { origins: "solid", destination: "liquid" },
   evaporate: { origins: "liquid", destination: "gas" },
   sublimate: { origins: "solid", destination: "gas" },
@@ -144,7 +148,7 @@ console.log(matter.state); // liquid
 In most use cases where finite state machines are needed, it is often helpful to have additional logic that happens before, during, and after transitions. This is where the `.trigger()` method is helpful.
 
 ```ts
-import { TransitionDict } from "@olympos/soter";
+import { TransitionInstructions } from "@olympos/soter";
 
 type HeroState = "idle" | "sleeping";
 type HeroTrigger = "patrol" | "sleep";
@@ -168,7 +172,11 @@ class Hero {
   }
 }
 
-const transitionDict: TransitionDict<HeroState, HeroTrigger, Hero> = {
+const TransitionInstructions: TransitionInstructions<
+  HeroState,
+  HeroTrigger,
+  Hero
+> = {
   patrol: {
     origins: "idle",
     destination: "idle",
@@ -181,7 +189,7 @@ const transitionDict: TransitionDict<HeroState, HeroTrigger, Hero> = {
   },
 };
 
-const hero = addStateMachine(new Hero("idle"), transitionDict);
+const hero = addStateMachine(new Hero("idle"), TransitionInstructions);
 hero.trigger("patrol");
 // The hero is expending energy!
 hero.trigger("patrol"); // No log because condition is not met so the hero does not work
@@ -210,7 +218,7 @@ export class Matter {
   }
 }
 
-export const matterMachineDict: TransitionDict<
+export const matterMachineDict: TransitionInstructions<
   MatterState,
   MatterTrigger,
   Matter
@@ -237,7 +245,7 @@ One caveat is that we don't get type inference on the props, but you may cast th
 The initial state machine may be configured with any of the following options like so:
 
 ```ts
-const matter = addStateMachine(new Matter(), matterTransitionDict, {
+const matter = addStateMachine(new Matter(), matterTransitionInstructions, {
   verbosity: false,
   throwExceptions: false,
   strictOrigins: false,
@@ -284,7 +292,7 @@ export class ExampleObject {
   }
 }
 
-export const exampleMachineDict: TransitionDict<
+export const exampleMachineDict: TransitionInstructions<
   ExampleObjectState,
   ExampleObjectTrigger,
   ExampleObject

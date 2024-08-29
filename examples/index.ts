@@ -1,4 +1,4 @@
-import { TransitionDict } from "../src";
+import { TransitionInstructions } from "../src";
 
 export type ExampleObjectState = "walking" | "stopped";
 export type ExampleObjectTrigger = "walk" | "stop";
@@ -28,7 +28,7 @@ export class ExampleObject {
   }
 }
 
-export const exampleMachineDict: TransitionDict<
+export const exampleMachineDict: TransitionInstructions<
   ExampleObjectState,
   ExampleObjectTrigger,
   ExampleObject

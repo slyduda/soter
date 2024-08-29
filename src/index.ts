@@ -1,6 +1,6 @@
 import { addStateMachine, StateMachine } from "./machine";
 import type {
-  TransitionDict,
+  TransitionInstructions,
   TransitionResult,
   TransitionOptions,
   StateMachineOptions,
@@ -11,7 +11,7 @@ export {
   addStateMachine,
   StateMachine,
   Stateful,
-  TransitionDict,
+  TransitionInstructions,
   TransitionOptions,
   TransitionResult,
   StateMachineOptions,

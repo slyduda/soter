@@ -16,3 +16,14 @@ test("checks to see if invalid transitions throw errors", () => {
 
   expect(() => matter.to("plasma")).toThrowError("DestinationInvalid");
 });
+
+test("checks to see if we can make valid transitions with .trigger(`to_{destination}`) with state list", () => {
+  const matter = addStateMachine({ state: "solid" }, ["solid", "liquid"]);
+  matter.trigger("to_liquid");
+  expect(matter.state).toBe("liquid");
+});
+
+test("checks to see if bad destination .trigger(`to_{destination}`) with state list causes error", () => {
+  const matter = addStateMachine({ state: "solid" }, ["solid", "liquid"]);
+  expect(() => matter.trigger("to_nonexistent")).toThrowError();
+});

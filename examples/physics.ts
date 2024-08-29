@@ -1,4 +1,4 @@
-import { TransitionDict } from "../src";
+import { TransitionInstructions } from "../src";
 
 export type MatterState = "solid" | "liquid" | "gas" | "plasma";
 export type MatterTrigger =
@@ -29,7 +29,7 @@ export class Matter {
   }
 }
 
-export const matterMachineDict: TransitionDict<
+export const matterMachineDict: TransitionInstructions<
   MatterState,
   MatterTrigger,
   Matter
