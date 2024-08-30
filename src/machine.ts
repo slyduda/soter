@@ -638,7 +638,7 @@ export class StateMachine<
 }
 
 export function addStateMachine<
-  StateType extends string,
+  StateType,
   TriggerType extends string,
   Context extends SimpleStateful<StateType>
 >(
