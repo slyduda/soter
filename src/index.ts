@@ -4,13 +4,11 @@ import type {
   TransitionResult,
   TransitionOptions,
   StateMachineOptions,
-  Stateful,
 } from "./types";
 
 export {
   addStateMachine,
   StateMachine,
-  Stateful,
   TransitionInstructions,
   TransitionOptions,
   TransitionResult,

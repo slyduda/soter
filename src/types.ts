@@ -84,24 +84,16 @@ export type TransitionInstructions<StateType, TriggerType extends string, T> = {
 };
 export type StateList<StateType> = StateType[];
 
-export interface Stateful<StateType> {
-  state: StateType;
-}
 
-export type StateMachineOptions<StateType, T> = {
+
+export type StateMachineInternalOptions<StateType, T, U, K extends keyof U> = {
+  key: K;
   verbose?: boolean;
   throwExceptions?: boolean;
   strictOrigins?: boolean;
   conditionEvaluator?: (conditionFunction: any, context: T) => boolean;
-  getState?: <T extends Stateful<StateType>>(
-    context: T,
-    key: keyof Stateful<StateType>
-  ) => StateType;
-  setState?: <T extends Stateful<StateType>>(
-    context: T,
-    state: StateType,
-    key: keyof Stateful<StateType>
-  ) => void;
+  getState: <T extends U>(context: T, key: keyof U) => StateType;
+  setState: <T extends U>(context: T, state: StateType, key: keyof U) => void;
   onBeforeTransition?: (
     plannedState: StateType,
     state: StateType,
@@ -110,20 +102,27 @@ export type StateMachineOptions<StateType, T> = {
   onTransition?: (state: StateType, oldState: StateType, context: T) => void;
 };
 
-export type StateMachineConfig<StateType, T> = {
+export type StateMachineOptions<StateType, T, U, K extends keyof U> = {
+  verbose?: boolean;
+  throwExceptions?: boolean;
+  strictOrigins?: boolean;
+  conditionEvaluator?: (conditionFunction: any, context: T) => boolean;
+  onBeforeTransition?: (
+    plannedState: StateType,
+    state: StateType,
+    context: T
+  ) => void;
+  onTransition?: (state: StateType, oldState: StateType, context: T) => void;
+};
+
+export type StateMachineConfig<StateType, T, U, K extends keyof U> = {
+  key: K;
   verbose: boolean;
   throwExceptions: boolean;
   strictOrigins: boolean;
   conditionEvaluator: (conditionFunction: any, context: T) => boolean;
-  getState: <T extends Stateful<StateType>>(
-    context: T,
-    key: keyof Stateful<StateType>
-  ) => StateType;
-  setState: <T extends Stateful<StateType>>(
-    context: T,
-    state: StateType,
-    key: keyof Stateful<StateType>
-  ) => void;
+  getState: <T extends U>(context: T, key: keyof U) => StateType;
+  setState: <T extends U>(context: T, state: StateType, key: keyof U) => void;
   onBeforeTransition: (
     plannedState: StateType,
     state: StateType,
