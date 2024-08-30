@@ -7,145 +7,145 @@ export type ErrorName =
   | "OriginDisallowed"
   | "DestinationInvalid";
 
-// Key of T ensures only methods of T can be used as effects
+// Key of Context ensures only methods of Context can be used as effects
 // This req was dropped in 0.0.10 in order to allow the flexibility of simple examples
 // Transition failures from typeguards and exceptions will be how we handle string types
-type Effect<T> = keyof T | string;
-type Condition<T> = keyof T | string;
+type Effect<Context> = keyof Context | string;
+type Condition<Context> = keyof Context | string;
 
 export const isFunction = (obj: unknown): obj is CallableFunction =>
   obj instanceof Function;
 
-export type Transition<StateType, TriggerType extends string, T> = {
+export type Transition<StateType, TriggerType extends string, Context> = {
   origins: StateType | StateType[];
   destination: StateType;
-  conditions?: Condition<T> | Condition<T>[];
-  effects?: Effect<T> | Effect<T>[];
+  conditions?: Condition<Context> | Condition<Context>[];
+  effects?: Effect<Context> | Effect<Context>[];
 };
 
-export type ConditionAttempt<T> = {
-  name: Condition<T>;
+export type ConditionAttempt<Context> = {
+  name: Condition<Context>;
   success: boolean;
-  context: T | null;
+  context: Context | null;
 };
 
-export type EffectAttempt<T> = {
-  name: Effect<T>;
+export type EffectAttempt<Context> = {
+  name: Effect<Context>;
   success: boolean;
-  context: T | null;
+  context: Context | null;
 };
 
-export type TransitionAttempt<StateType, TriggerType extends string, T> = {
+export type TransitionAttempt<StateType, TriggerType extends string, Context> = {
   name: TriggerType;
   success: boolean;
-  failure: TransitionFailure<TriggerType, T> | null;
-  conditions: ConditionAttempt<T>[];
-  effects: EffectAttempt<T>[];
-  transition: Transition<StateType, TriggerType, T>;
-  context: T | null;
+  failure: TransitionFailure<TriggerType, Context> | null;
+  conditions: ConditionAttempt<Context>[];
+  effects: EffectAttempt<Context>[];
+  transition: Transition<StateType, TriggerType, Context>;
+  context: Context | null;
 };
 
-export type TransitionFailure<TriggerType extends string, T> = {
+export type TransitionFailure<TriggerType extends string, Context> = {
   type: ErrorName;
   undefined: boolean;
   trigger: TriggerType | null;
-  method: Condition<T> | Effect<T> | null;
-  context: T | null;
+  method: Condition<Context> | Effect<Context> | null;
+  context: Context | null;
 };
 
 export type PendingTransitionResult<
   StateType,
   TriggerType extends string,
-  T
+  Context
 > = {
   success: boolean | null; // Whether the Transition was successful or not
-  failure: TransitionFailure<TriggerType, T> | null;
+  failure: TransitionFailure<TriggerType, Context> | null;
   initial: StateType;
   current: StateType | null;
-  attempts: TransitionAttempt<StateType, TriggerType, T>[] | null;
-  precontext: T;
-  context: T | null;
+  attempts: TransitionAttempt<StateType, TriggerType, Context>[] | null;
+  precontext: Context;
+  context: Context | null;
 };
 
-export type TransitionResult<StateType, TriggerType extends string, T> = {
+export type TransitionResult<StateType, TriggerType extends string, Context> = {
   success: boolean; // Whether the Transition was successful or not
-  failure: TransitionFailure<TriggerType, T> | null;
+  failure: TransitionFailure<TriggerType, Context> | null;
   initial: StateType;
   current: StateType;
-  attempts: TransitionAttempt<StateType, TriggerType, T>[];
-  precontext: T;
-  context: T;
+  attempts: TransitionAttempt<StateType, TriggerType, Context>[];
+  precontext: Context;
+  context: Context;
 };
 
-export type TransitionInstructions<StateType, TriggerType extends string, T> = {
+export type TransitionInstructions<StateType, TriggerType extends string, Context> = {
   [K in TriggerType]:
-    | Transition<StateType, TriggerType, T>
-    | Transition<StateType, TriggerType, T>[];
+    | Transition<StateType, TriggerType, Context>
+    | Transition<StateType, TriggerType, Context>[];
 };
 export type StateList<StateType> = StateType[];
 
 
 
-export type StateMachineInternalOptions<StateType, T, U, K extends keyof U> = {
+export type StateMachineInternalOptions<StateType, Context, Stateful, K extends keyof Stateful> = {
   key: K;
   verbose?: boolean;
   throwExceptions?: boolean;
   strictOrigins?: boolean;
-  conditionEvaluator?: (conditionFunction: any, context: T) => boolean;
-  getState: <T extends U>(context: T, key: keyof U) => StateType;
-  setState: <T extends U>(context: T, state: StateType, key: keyof U) => void;
+  conditionEvaluator?: (conditionFunction: any, context: Context) => boolean;
+  getState: <Context extends Stateful>(context: Context, key: keyof Stateful) => StateType;
+  setState: <Context extends Stateful>(context: Context, state: StateType, key: keyof Stateful) => void;
   onBeforeTransition?: (
     plannedState: StateType,
     state: StateType,
-    context: T
+    context: Context
   ) => void;
-  onTransition?: (state: StateType, oldState: StateType, context: T) => void;
+  onTransition?: (state: StateType, oldState: StateType, context: Context) => void;
 };
 
-export type StateMachineOptions<StateType, T, U, K extends keyof U> = {
+export type StateMachineOptions<StateType, Context, Stateful, K extends keyof Stateful> = {
   verbose?: boolean;
   throwExceptions?: boolean;
   strictOrigins?: boolean;
-  conditionEvaluator?: (conditionFunction: any, context: T) => boolean;
+  conditionEvaluator?: (conditionFunction: any, context: Context) => boolean;
   onBeforeTransition?: (
     plannedState: StateType,
     state: StateType,
-    context: T
+    context: Context
   ) => void;
-  onTransition?: (state: StateType, oldState: StateType, context: T) => void;
+  onTransition?: (state: StateType, oldState: StateType, context: Context) => void;
 };
 
-export type StateMachineConfig<StateType, T, U, K extends keyof U> = {
+export type StateMachineConfig<StateType, Context, Stateful, K extends keyof Stateful> = {
   key: K;
   verbose: boolean;
   throwExceptions: boolean;
   strictOrigins: boolean;
-  conditionEvaluator: (conditionFunction: any, context: T) => boolean;
-  getState: <T extends U>(context: T, key: keyof U) => StateType;
-  setState: <T extends U>(context: T, state: StateType, key: keyof U) => void;
+  conditionEvaluator: (conditionFunction: any, context: Context) => boolean;
+  getState: <Context extends Stateful>(context: Context, key: keyof Stateful) => StateType;
+  setState: <Context extends Stateful>(context: Context, state: StateType, key: keyof Stateful) => void;
   onBeforeTransition: (
     plannedState: StateType,
     state: StateType,
-    context: T
+    context: Context
   ) => void;
-  onTransition: (state: StateType, oldState: StateType, context: T) => void;
+  onTransition: (state: StateType, oldState: StateType, context: Context) => void;
 };
 
-export type TransitionOptions<T> = {
-  onError?: (context: T, precontext: T) => void;
+export type TransitionOptions<Context> = {
+  onError?: (context: Context, precontext: Context) => void;
   throwExceptions?: boolean;
 };
 
 export type TransitionProps = {};
 
-export type AvailableTransition<StateType, TriggerType extends string, T> = {
+export type AvailableTransition<StateType, TriggerType extends string, Context> = {
   trigger: TriggerType;
   origins: StateType[];
   destination: StateType;
   satisfied: boolean;
   conditions: {
-    name: Condition<T>;
+    name: Condition<Context>;
     satisfied: boolean;
   }[];
-  effects: Effect<T>[];
+  effects: Effect<Context>[];
 };
