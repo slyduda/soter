@@ -27,6 +27,10 @@ export class Matter {
     this.temperature = temperature;
     this.pressure = pressure;
   }
+
+  canMelt() {
+    return this.temperature > 0;
+  }
 }
 
 export const matterMachineDict: TransitionInstructions<
@@ -35,7 +39,12 @@ export const matterMachineDict: TransitionInstructions<
   Matter
 > = {
   melt: [
-    { origins: "solid", destination: "liquid", effects: "setEnvironment" },
+    {
+      origins: "solid",
+      destination: "liquid",
+      effects: "setEnvironment",
+      conditions: "canMelt",
+    },
   ],
   evaporate: [{ origins: "liquid", destination: "gas" }],
   sublimate: [{ origins: "solid", destination: "gas" }],

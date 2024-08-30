@@ -1,5 +1,4 @@
 export type ErrorName =
-  | "TransitionsUndefined"
   | "ConditionValue"
   | "ConditionUndefined"
   | "TriggerUndefined"
@@ -89,18 +88,48 @@ export interface Stateful<StateType> {
   state: StateType;
 }
 
-export type StateMachineOptions = {
-  verbosity?: boolean;
+export type StateMachineOptions<StateType, T> = {
+  verbose?: boolean;
   throwExceptions?: boolean;
   strictOrigins?: boolean;
-  conditionEvaluator?: <T>(conditionFunction: any, context: T) => boolean;
+  conditionEvaluator?: (conditionFunction: any, context: T) => boolean;
+  getState?: <T extends Stateful<StateType>>(
+    context: T,
+    key: keyof Stateful<StateType>
+  ) => StateType;
+  setState?: <T extends Stateful<StateType>>(
+    context: T,
+    state: StateType,
+    key: keyof Stateful<StateType>
+  ) => void;
+  onBeforeTransition?: (
+    plannedState: StateType,
+    state: StateType,
+    context: T
+  ) => void;
+  onTransition?: (state: StateType, oldState: StateType, context: T) => void;
 };
 
-export type StateMachineConfig = {
-  verbosity: boolean;
+export type StateMachineConfig<StateType, T> = {
+  verbose: boolean;
   throwExceptions: boolean;
   strictOrigins: boolean;
-  conditionEvaluator: <T>(conditionFunction: any, context: T) => boolean;
+  conditionEvaluator: (conditionFunction: any, context: T) => boolean;
+  getState: <T extends Stateful<StateType>>(
+    context: T,
+    key: keyof Stateful<StateType>
+  ) => StateType;
+  setState: <T extends Stateful<StateType>>(
+    context: T,
+    state: StateType,
+    key: keyof Stateful<StateType>
+  ) => void;
+  onBeforeTransition: (
+    plannedState: StateType,
+    state: StateType,
+    context: T
+  ) => void;
+  onTransition: (state: StateType, oldState: StateType, context: T) => void;
 };
 
 export type TransitionOptions<T> = {

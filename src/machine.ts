@@ -18,13 +18,33 @@ import {
 } from "./types";
 import { normalizeArray } from "./utils";
 
-function evaluateCondition<T>(conditionFunction: any, context: T): boolean {
+function defaultConditionEvaluator<T>(
+  conditionFunction: any,
+  context: T
+): boolean {
   if (typeof conditionFunction === "function") {
     return conditionFunction.call(context);
   } else {
     return Boolean(conditionFunction);
   }
 }
+
+function defaultGetState<T extends Stateful<StateType>, StateType>(
+  context: T,
+  key: keyof Stateful<StateType>
+): StateType {
+  return context[key];
+}
+
+function defaultSetState<T extends Stateful<StateType>, StateType>(
+  context: T,
+  state: StateType,
+  key: keyof Stateful<StateType>
+) {
+  context[key] = state;
+}
+
+const noop = () => {};
 
 function createTriggerKeys<StateType, TriggerType extends string>(
   states: StateList<StateType>
@@ -39,26 +59,26 @@ export class StateMachine<
 > {
   private __context: T;
   private __cache: T | null;
-  private __instructions: TransitionInstructions<
-    StateType,
-    TriggerType,
-    T
-  > | null;
+  private __instructions: TransitionInstructions<StateType, TriggerType, T>;
   private __states: StateList<StateType>;
-  private __options: StateMachineConfig;
+  private __options: StateMachineConfig<StateType, T>;
 
   constructor(
     context: T,
     instructions:
       | TransitionInstructions<StateType, TriggerType, T>
       | StateList<StateType>,
-    options?: StateMachineOptions
+    options?: StateMachineOptions<StateType, T>
   ) {
     const {
-      verbosity = false,
+      verbose = false,
       throwExceptions = true,
       strictOrigins = false,
-      conditionEvaluator = evaluateCondition,
+      conditionEvaluator = defaultConditionEvaluator,
+      getState = defaultGetState,
+      setState = defaultSetState,
+      onTransition = noop,
+      onBeforeTransition = noop,
     } = options ?? {};
 
     this.__context = context;
@@ -71,19 +91,30 @@ export class StateMachine<
     }
     this.__cache = null;
     this.__options = {
-      verbosity,
+      verbose,
       throwExceptions,
       strictOrigins,
       conditionEvaluator,
+      getState,
+      setState,
+      onTransition,
+      onBeforeTransition,
     };
   }
 
-  get state(): StateType {
-    return this.__context.state;
+  private __getState(): StateType {
+    const state: StateType = this.__options.getState(this.__context, "state");
+    if (!state) throw new Error("Current state is undefined");
+    return state;
   }
 
-  set state(state: StateType) {
-    this.__context.state = state;
+  private __setState(state: StateType) {
+    const oldState = this.__getState();
+    this.__options.onBeforeTransition(state, oldState, this.__context);
+    this.__options.setState(this.__context, state, "state");
+    const newState = this.__getState();
+    if (this.__options.verbose) console.info(`State changed to ${newState}`);
+    this.__options.onTransition(newState, oldState, this.__context);
   }
 
   private __getStatesFromTransitionInstructions(
@@ -146,7 +177,7 @@ export class StateMachine<
     return {
       success: null,
       failure: null,
-      initial: this.__context.state,
+      initial: this.__getState(),
       current: null,
       attempts: null,
       precontext: context,
@@ -169,7 +200,7 @@ export class StateMachine<
       success,
       failure,
       context: failure?.context ?? this.__getCurrentContext(),
-      current: this.state,
+      current: this.__getState(),
       attempts: pending.attempts ?? [], // change this to null if there wasnt a matching transition?
     };
     return result;
@@ -196,7 +227,7 @@ export class StateMachine<
         message,
         result: result,
       });
-    if (this.__options.verbosity) console.info(message);
+    if (this.__options.verbose) console.info(message);
 
     return result;
   }
@@ -224,7 +255,7 @@ export class StateMachine<
         result: null,
       });
     }
-    this.state = state;
+    this.__setState(state);
   }
 
   triggerWithOptions(
@@ -249,7 +280,7 @@ export class StateMachine<
       passedProps = secondParameter;
       passedOptions = thirdParameter;
     } else {
-      // Cast sinve we know it will be Trigger Options
+      // Cast since we know it will be Trigger Options
       passedOptions = secondParameter;
     }
 
@@ -272,24 +303,6 @@ export class StateMachine<
     const { onError, throwExceptions }: TransitionOptions<T> = options ?? {};
     const shouldThrowException =
       throwExceptions ?? this.__options.throwExceptions;
-
-    // This can happen if a StateList was supplied
-    // TODO: Make StateList generate simple transitions to all from all
-    if (!this.__instructions) {
-      // Handle transitions undefined
-      return this.__handleFailure(
-        pending,
-        {
-          type: "TransitionsUndefined",
-          method: null,
-          undefined: true,
-          trigger,
-          context: this.__getCurrentContext(),
-        },
-        `trigger("${trigger}") called, but machine does not have transitions defined.`,
-        { shouldThrowException }
-      );
-    }
 
     const transitions = normalizeArray(this.__instructions[trigger]);
 
@@ -315,7 +328,7 @@ export class StateMachine<
     const origins = this.__getOriginsFromTransitions(transitions);
 
     // If the transition picked does not have the current state listed in any origins
-    if (!origins.includes(this.state)) {
+    if (!origins.includes(this.__getState())) {
       // Handle Origin Disallowed
       return this.__handleFailure(
         pending,
@@ -326,7 +339,7 @@ export class StateMachine<
           trigger,
           context: this.__getCurrentContext(),
         },
-        `Invalid transition from ${this.state} using trigger ${trigger}`,
+        `Invalid transition from ${this.__getState()} using trigger ${trigger}`,
         { shouldThrowException }
       );
     }
@@ -396,9 +409,7 @@ export class StateMachine<
         if (
           !this.__options.conditionEvaluator(conditionFunction, this.__context)
         ) {
-          const message = `Condition ${String(
-            condition
-          )} false, transition aborted.`;
+          const message = `Condition ${String(condition)} false. `;
           const failure: TransitionFailure<TriggerType, T> = {
             type: "ConditionValue",
             method: condition,
@@ -411,13 +422,19 @@ export class StateMachine<
 
           // Don't fail on bad conditions if there is a possibility for a next transition to succeed
           if (nextTransition) {
-            if (this.__options.verbosity) console.info(message);
+            if (this.__options.verbose)
+              console.info(message + " Skipping to next transition.");
             transitionAttempt.failure = failure;
             continue transitionLoop;
           } else {
-            return this.__handleFailure(pending, failure, message, {
-              shouldThrowException,
-            });
+            return this.__handleFailure(
+              pending,
+              failure,
+              message + " Transition aborted.",
+              {
+                shouldThrowException,
+              }
+            );
           }
         }
 
@@ -495,9 +512,7 @@ export class StateMachine<
       }
 
       // Change the state to the destination state
-      this.state = transition.destination;
-      if (this.__options.verbosity)
-        console.info(`State changed to ${this.state}`);
+      this.__setState(transition.destination);
 
       transitionAttempt.success = true;
 
@@ -512,20 +527,12 @@ export class StateMachine<
   }
 
   get potentialTransitions() {
-    if (!this.state) {
-      throw new Error("Current state is undefined");
-    }
-
-    if (!this.__instructions) {
-      throw new Error("No transitions defined in the state machine");
-    }
-
     const potentialTransitions: AvailableTransition<
       StateType,
       TriggerType,
       T
     >[] = [];
-    const currentState = this.state;
+    const currentState = this.__getState();
 
     for (const [trigger, transitionList] of Object.entries(
       this.__instructions
@@ -589,14 +596,6 @@ export class StateMachine<
   }
 
   get validatedTransitions() {
-    if (!this.state) {
-      throw new Error("Current state is undefined");
-    }
-
-    if (!this.__instructions) {
-      throw new Error("No transitions defined in the state machine");
-    }
-
     // Retrieve potential transitions
     const potentialTransitions = this.potentialTransitions;
 
@@ -618,7 +617,7 @@ export function addStateMachine<
   instructions:
     | TransitionInstructions<StateType, TriggerType, T>
     | StateList<StateType>,
-  options?: StateMachineOptions
+  options?: StateMachineOptions<StateType, T>
 ): T & StateMachine<StateType, TriggerType, T> {
   const wrapper = new StateMachine(context, instructions, options);
 
