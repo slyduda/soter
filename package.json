@@ -1,6 +1,6 @@
 {
   "name": "@olympos/soter",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "private": false,
   "author": "Sly Duda <me@slyduda.com> (https://slyduda.com/)",
   "type": "module",
@@ -11,6 +11,7 @@
   "description": "Finite State Machine mixins and helpers for programming state logic.",
   "license": "MIT",
   "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.4",
     "@types/node": "^22.4.0",
     "tsx": "^4.17.0",
     "vite": "^5.4.1",
