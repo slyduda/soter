@@ -126,11 +126,11 @@ export class StateMachine<
 
   private __setState(state: StateType) {
     const oldState = this.__getState();
-    this.__options.onBeforeTransition(state, oldState, this.__context);
+    this.__options.onBeforeTransition(state, oldState, this.__context, this);
     this.__options.setState(this.__context, state, this.__options.key);
     const newState = this.__getState();
     if (this.__options.verbose) console.info(`State changed to ${newState}`);
-    this.__options.onTransition(newState, oldState, this.__context);
+    this.__options.onTransition(newState, oldState, this.__context, this);
   }
 
   private __getStatesFromTransitionInstructions(
