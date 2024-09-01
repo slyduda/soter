@@ -18,7 +18,7 @@ type Condition<Context> = keyof Context | string;
 export const isFunction = (obj: unknown): obj is CallableFunction =>
   obj instanceof Function;
 
-export type Transition<Context, StateType, TriggerType extends string> = {
+export type Transition<Context, StateType, TriggerType> = {
   origins: StateType | StateType[];
   destination: StateType;
   conditions?: Condition<Context> | Condition<Context>[];
@@ -37,11 +37,7 @@ export type EffectAttempt<Context> = {
   context: Context | null;
 };
 
-export type TransitionAttempt<
-  Context,
-  StateType,
-  TriggerType extends string
-> = {
+export type TransitionAttempt<Context, StateType, TriggerType> = {
   name: TriggerType;
   success: boolean;
   failure: TransitionFailure<Context, TriggerType> | null;
@@ -51,7 +47,7 @@ export type TransitionAttempt<
   context: Context | null;
 };
 
-export type TransitionFailure<Context, TriggerType extends string> = {
+export type TransitionFailure<Context, TriggerType> = {
   type: ErrorName;
   undefined: boolean;
   trigger: TriggerType | null;
@@ -59,11 +55,7 @@ export type TransitionFailure<Context, TriggerType extends string> = {
   context: Context | null;
 };
 
-export type PendingTransitionResult<
-  Context,
-  StateType,
-  TriggerType extends string
-> = {
+export type PendingTransitionResult<Context, StateType, TriggerType> = {
   success: boolean | null; // Whether the Transition was successful or not
   failure: TransitionFailure<Context, TriggerType> | null;
   initial: StateType;
@@ -73,7 +65,7 @@ export type PendingTransitionResult<
   context: Context | null;
 };
 
-export type TransitionResult<Context, StateType, TriggerType extends string> = {
+export type TransitionResult<Context, StateType, TriggerType> = {
   success: boolean; // Whether the Transition was successful or not
   failure: TransitionFailure<Context, TriggerType> | null;
   initial: StateType;
@@ -83,11 +75,7 @@ export type TransitionResult<Context, StateType, TriggerType extends string> = {
   context: Context;
 };
 
-export type TransitionInstructions<
-  Context,
-  StateType,
-  TriggerType extends string
-> = {
+export type TransitionInstructions<Context, StateType, TriggerType extends string> = {
   [K in TriggerType]:
     | Transition<Context, StateType, TriggerType>
     | Transition<Context, StateType, TriggerType>[];
@@ -195,11 +183,7 @@ export type TransitionOptions<Context> = {
 
 export type TransitionProps = {};
 
-export type AvailableTransition<
-  Context,
-  StateType,
-  TriggerType extends string
-> = {
+export type AvailableTransition<Context, StateType, TriggerType> = {
   trigger: TriggerType;
   origins: StateType[];
   destination: StateType;
