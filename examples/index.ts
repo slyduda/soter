@@ -29,9 +29,9 @@ export class ExampleObject {
 }
 
 export const exampleMachineDict: TransitionInstructions<
+  ExampleObject,
   ExampleObjectState,
-  ExampleObjectTrigger,
-  ExampleObject
+  ExampleObjectTrigger
 > = {
   walk: {
     origins: ["stopped"],

@@ -18,7 +18,7 @@ type Condition<Context> = keyof Context | string;
 export const isFunction = (obj: unknown): obj is CallableFunction =>
   obj instanceof Function;
 
-export type Transition<StateType, TriggerType extends string, Context> = {
+export type Transition<Context, StateType, TriggerType extends string> = {
   origins: StateType | StateType[];
   destination: StateType;
   conditions?: Condition<Context> | Condition<Context>[];
@@ -38,20 +38,20 @@ export type EffectAttempt<Context> = {
 };
 
 export type TransitionAttempt<
+  Context,
   StateType,
-  TriggerType extends string,
-  Context
+  TriggerType extends string
 > = {
   name: TriggerType;
   success: boolean;
-  failure: TransitionFailure<TriggerType, Context> | null;
+  failure: TransitionFailure<Context, TriggerType> | null;
   conditions: ConditionAttempt<Context>[];
   effects: EffectAttempt<Context>[];
-  transition: Transition<StateType, TriggerType, Context>;
+  transition: Transition<Context, StateType, TriggerType>;
   context: Context | null;
 };
 
-export type TransitionFailure<TriggerType extends string, Context> = {
+export type TransitionFailure<Context, TriggerType extends string> = {
   type: ErrorName;
   undefined: boolean;
   trigger: TriggerType | null;
@@ -60,43 +60,67 @@ export type TransitionFailure<TriggerType extends string, Context> = {
 };
 
 export type PendingTransitionResult<
+  Context,
   StateType,
-  TriggerType extends string,
-  Context
+  TriggerType extends string
 > = {
   success: boolean | null; // Whether the Transition was successful or not
-  failure: TransitionFailure<TriggerType, Context> | null;
+  failure: TransitionFailure<Context, TriggerType> | null;
   initial: StateType;
   current: StateType | null;
-  attempts: TransitionAttempt<StateType, TriggerType, Context>[] | null;
+  attempts: TransitionAttempt<Context, StateType, TriggerType>[] | null;
   precontext: Context;
   context: Context | null;
 };
 
-export type TransitionResult<StateType, TriggerType extends string, Context> = {
+export type TransitionResult<Context, StateType, TriggerType extends string> = {
   success: boolean; // Whether the Transition was successful or not
-  failure: TransitionFailure<TriggerType, Context> | null;
+  failure: TransitionFailure<Context, TriggerType> | null;
   initial: StateType;
   current: StateType;
-  attempts: TransitionAttempt<StateType, TriggerType, Context>[];
+  attempts: TransitionAttempt<Context, StateType, TriggerType>[];
   precontext: Context;
   context: Context;
 };
 
 export type TransitionInstructions<
+  Context,
   StateType,
-  TriggerType extends string,
-  Context
+  TriggerType extends string
 > = {
   [K in TriggerType]:
-    | Transition<StateType, TriggerType, Context>
-    | Transition<StateType, TriggerType, Context>[];
+    | Transition<Context, StateType, TriggerType>
+    | Transition<Context, StateType, TriggerType>[];
 };
 export type StateList<StateType> = StateType[];
 
-export type StateMachineInternalOptions<
-  StateType,
+export type StateMachineOptions<
   Context,
+  StateType,
+  Stateful,
+  K extends keyof Stateful
+> = {
+  verbose?: boolean;
+  throwExceptions?: boolean;
+  strictOrigins?: boolean;
+  conditionEvaluator?: (conditionFunction: any, context: Context) => boolean;
+  onBeforeTransition?: (
+    plannedState: StateType,
+    state: StateType,
+    context: Context,
+    self: StateMachine<any, StateType, string, Stateful, K>
+  ) => void;
+  onTransition?: (
+    state: StateType,
+    oldState: StateType,
+    context: Context,
+    self: StateMachine<any, StateType, string, Stateful, K>
+  ) => void;
+};
+
+export type StateMachineInternalOptions<
+  Context,
+  StateType,
   Stateful,
   K extends keyof Stateful
 > = {
@@ -105,6 +129,7 @@ export type StateMachineInternalOptions<
   throwExceptions?: boolean;
   strictOrigins?: boolean;
   conditionEvaluator?: (conditionFunction: any, context: Context) => boolean;
+  contextCopier?: (context: Context) => Context | any;
   getState: <Context extends Stateful>(
     context: Context,
     key: keyof Stateful
@@ -118,43 +143,19 @@ export type StateMachineInternalOptions<
     plannedState: StateType,
     state: StateType,
     context: Context,
-    self: StateMachine<StateType, string, Stateful, K, any>
+    self: StateMachine<any, StateType, string, Stateful, K>
   ) => void;
   onTransition?: (
     state: StateType,
     oldState: StateType,
     context: Context,
-    self: StateMachine<StateType, string, Stateful, K, any>
-  ) => void;
-};
-
-export type StateMachineOptions<
-  StateType,
-  Context,
-  Stateful,
-  K extends keyof Stateful
-> = {
-  verbose?: boolean;
-  throwExceptions?: boolean;
-  strictOrigins?: boolean;
-  conditionEvaluator?: (conditionFunction: any, context: Context) => boolean;
-  onBeforeTransition?: (
-    plannedState: StateType,
-    state: StateType,
-    context: Context,
-    self: StateMachine<StateType, string, Stateful, K, any>
-  ) => void;
-  onTransition?: (
-    state: StateType,
-    oldState: StateType,
-    context: Context,
-    self: StateMachine<StateType, string, Stateful, K, any>
+    self: StateMachine<any, StateType, string, Stateful, K>
   ) => void;
 };
 
 export type StateMachineConfig<
-  StateType,
   Context,
+  StateType,
   Stateful,
   K extends keyof Stateful
 > = {
@@ -163,6 +164,7 @@ export type StateMachineConfig<
   throwExceptions: boolean;
   strictOrigins: boolean;
   conditionEvaluator: (conditionFunction: any, context: Context) => boolean;
+  contextCopier: (context: Context) => Context | any;
   getState: <Context extends Stateful>(
     context: Context,
     key: keyof Stateful
@@ -176,13 +178,13 @@ export type StateMachineConfig<
     plannedState: StateType,
     state: StateType,
     context: Context,
-    self: StateMachine<StateType, string, Stateful, K, any>
+    self: StateMachine<any, StateType, string, Stateful, K>
   ) => void;
   onTransition: (
     state: StateType,
     oldState: StateType,
     context: Context,
-    self: StateMachine<StateType, string, Stateful, K, any>
+    self: StateMachine<any, StateType, string, Stateful, K>
   ) => void;
 };
 
@@ -194,9 +196,9 @@ export type TransitionOptions<Context> = {
 export type TransitionProps = {};
 
 export type AvailableTransition<
+  Context,
   StateType,
-  TriggerType extends string,
-  Context
+  TriggerType extends string
 > = {
   trigger: TriggerType;
   origins: StateType[];

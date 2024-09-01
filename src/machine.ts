@@ -1,18 +1,18 @@
 import { TransitionError } from "./errors";
-import {
-  type ConditionAttempt,
-  type EffectAttempt,
-  type TransitionInstructions,
-  type StateMachineOptions,
-  type Transition,
-  type TransitionAttempt,
-  type TransitionFailure,
-  type TransitionOptions,
-  type TransitionProps,
-  type TransitionResult,
-  type StateList,
-  type PendingTransitionResult,
-  type AvailableTransition,
+import type {
+  ConditionAttempt,
+  EffectAttempt,
+  TransitionInstructions,
+  StateMachineOptions,
+  Transition,
+  TransitionAttempt,
+  TransitionFailure,
+  TransitionOptions,
+  TransitionProps,
+  TransitionResult,
+  StateList,
+  PendingTransitionResult,
+  AvailableTransition,
   StateMachineConfig,
   StateMachineInternalOptions,
 } from "./types";
@@ -20,6 +20,10 @@ import { normalizeArray } from "./utils";
 
 interface SimpleStateful<StateType> {
   state: StateType;
+}
+
+function defaultContextCopier<Context>(context: Context): Context {
+  return JSON.parse(JSON.stringify(context));
 }
 
 function defaultConditionEvaluator<Context>(
@@ -35,16 +39,16 @@ function defaultConditionEvaluator<Context>(
 
 function defaultGetState<
   Context extends SimpleStateful<StateType>,
-  K extends keyof SimpleStateful<StateType>,
-  StateType
+  StateType,
+  K extends keyof SimpleStateful<StateType>
 >(context: Context, key: K): StateType {
   return context[key];
 }
 
 function defaultSetState<
   Context extends SimpleStateful<StateType>,
-  K extends keyof SimpleStateful<StateType>,
-  StateType
+  StateType,
+  K extends keyof SimpleStateful<StateType>
 >(context: Context, state: StateType, key: K) {
   context[key] = state;
 }
@@ -58,28 +62,28 @@ function createTriggerKeys<StateType, TriggerType extends string>(
 }
 
 export class StateMachine<
+  Context extends Stateful,
   StateType,
   TriggerType extends string,
   Stateful,
-  K extends keyof Stateful,
-  Context extends Stateful
+  K extends keyof Stateful
 > {
-  private __context: Context;
-  private __cache: Context | null;
-  private __instructions: TransitionInstructions<
+  private ___context: Context;
+  private ___cache: Context | null;
+  private ___instructions: TransitionInstructions<
+    Context,
     StateType,
-    TriggerType,
-    Context
+    TriggerType
   >;
-  private __states: StateList<StateType>;
-  private __options: StateMachineConfig<StateType, Context, Stateful, K>;
+  private ___states: StateList<StateType>;
+  private ___options: StateMachineConfig<Context, StateType, Stateful, K>;
 
   constructor(
     context: Context,
     instructions:
-      | TransitionInstructions<StateType, TriggerType, Context>
+      | TransitionInstructions<Context, StateType, TriggerType>
       | StateList<StateType>,
-    options: StateMachineInternalOptions<StateType, Context, Stateful, K>
+    options: StateMachineInternalOptions<Context, StateType, Stateful, K>
   ) {
     const {
       key,
@@ -87,27 +91,29 @@ export class StateMachine<
       throwExceptions = true,
       strictOrigins = false,
       conditionEvaluator = defaultConditionEvaluator,
+      contextCopier = defaultContextCopier,
       getState,
       setState,
       onTransition = noop,
       onBeforeTransition = noop,
     } = options ?? {};
 
-    this.__context = context;
+    this.___context = context;
     if (Array.isArray(instructions)) {
-      this.__states = instructions;
-      this.__instructions = this.__generateTransitionInstructions(instructions);
+      this.___states = instructions;
+      this.___instructions = this.___generateTransitionInstructions(instructions);
     } else {
-      this.__states = this.__getStatesFromTransitionInstructions(instructions);
-      this.__instructions = instructions;
+      this.___states = this.___getStatesFromTransitionInstructions(instructions);
+      this.___instructions = instructions;
     }
-    this.__cache = null;
-    this.__options = {
+    this.___cache = null;
+    this.___options = {
       key,
       verbose,
       throwExceptions,
       strictOrigins,
       conditionEvaluator,
+      contextCopier,
       getState,
       setState,
       onTransition,
@@ -115,31 +121,31 @@ export class StateMachine<
     };
   }
 
-  private __getState(): StateType {
-    const state: StateType = this.__options.getState(
-      this.__context,
-      this.__options.key
+  private ___getState(): StateType {
+    const state: StateType = this.___options.getState(
+      this.___context,
+      this.___options.key
     );
     if (!state) throw new Error("Current state is undefined");
     return state;
   }
 
-  private __setState(state: StateType) {
-    const oldState = this.__getState();
-    this.__options.onBeforeTransition(state, oldState, this.__context, this);
-    this.__options.setState(this.__context, state, this.__options.key);
-    const newState = this.__getState();
-    if (this.__options.verbose) console.info(`State changed to ${newState}`);
-    this.__options.onTransition(newState, oldState, this.__context, this);
+  private ___setState(state: StateType) {
+    const oldState = this.___getState();
+    this.___options.onBeforeTransition(state, oldState, this.___context, this);
+    this.___options.setState(this.___context, state, this.___options.key);
+    const newState = this.___getState();
+    if (this.___options.verbose) console.info(`State changed to ${newState}`);
+    this.___options.onTransition(newState, oldState, this.___context, this);
   }
 
-  private __getStatesFromTransitionInstructions(
-    dict: TransitionInstructions<StateType, TriggerType, Context>
+  private ___getStatesFromTransitionInstructions(
+    dict: TransitionInstructions<Context, StateType, TriggerType>
   ): StateList<StateType> {
     const states = new Set<StateType>();
     const transitions = Object.values<
-      | Transition<StateType, TriggerType, Context>
-      | Transition<StateType, TriggerType, Context>[]
+      | Transition<Context, StateType, TriggerType>
+      | Transition<Context, StateType, TriggerType>[]
     >(dict);
     for (let i = 0; i < transitions.length; i++) {
       const transitionList = normalizeArray(transitions[i]);
@@ -154,11 +160,11 @@ export class StateMachine<
     return new Array(...states);
   }
 
-  private __generateTransitionInstructions(
+  private ___generateTransitionInstructions(
     states: StateList<StateType>
-  ): TransitionInstructions<StateType, TriggerType, Context> {
+  ): TransitionInstructions<Context, StateType, TriggerType> {
     const instructions: Partial<
-      Record<TriggerType, Transition<StateType, TriggerType, Context>>
+      Record<TriggerType, Transition<Context, StateType, TriggerType>>
     > = {};
 
     const triggers = createTriggerKeys<StateType, TriggerType>(states);
@@ -174,30 +180,31 @@ export class StateMachine<
     }
 
     return instructions as TransitionInstructions<
+      Context,
       StateType,
-      TriggerType,
-      Context
+      TriggerType
     >;
   }
 
-  private __getCurrentContext(): Context {
+  private ___getCurrentContext(): Context {
     // TODO: Benchmark
-    // const deepCopy: Context = structuredClone(this.__context);
-    const deepCopy: Context = JSON.parse(JSON.stringify(this.__context));
+    // const deepCopy: Context = structuredClone(this.___context);
+
+    const deepCopy = this.___options.contextCopier(this.___context);
     // this.cache = deepCopy;
     return deepCopy;
   }
 
-  private __createPendingTransitionResult(): PendingTransitionResult<
+  private ___createPendingTransitionResult(): PendingTransitionResult<
+    Context,
     StateType,
-    TriggerType,
-    Context
+    TriggerType
   > {
-    const context = this.__getCurrentContext();
+    const context = this.___getCurrentContext();
     return {
       success: null,
       failure: null,
-      initial: this.__getState(),
+      initial: this.___getState(),
       current: null,
       attempts: null,
       precontext: context,
@@ -205,38 +212,38 @@ export class StateMachine<
     };
   }
 
-  private __prepareTransitionResult(
-    pending: PendingTransitionResult<StateType, TriggerType, Context>,
+  private ___prepareTransitionResult(
+    pending: PendingTransitionResult<Context, StateType, TriggerType>,
     {
       success,
       failure,
     }: {
       success: boolean;
-      failure: TransitionFailure<TriggerType, Context> | null;
+      failure: TransitionFailure<Context, TriggerType> | null;
     }
-  ): TransitionResult<StateType, TriggerType, Context> {
-    const result: TransitionResult<StateType, TriggerType, Context> = {
+  ): TransitionResult<Context, StateType, TriggerType> {
+    const result: TransitionResult<Context, StateType, TriggerType> = {
       ...pending,
       success,
       failure,
-      context: failure?.context ?? this.__getCurrentContext(),
-      current: this.__getState(),
+      context: failure?.context ?? this.___getCurrentContext(),
+      current: this.___getState(),
       attempts: pending.attempts ?? [], // change this to null if there wasnt a matching transition?
     };
     return result;
   }
 
-  private __handleFailure(
-    pending: PendingTransitionResult<StateType, TriggerType, Context>,
-    failure: TransitionFailure<TriggerType, Context>,
+  private ___handleFailure(
+    pending: PendingTransitionResult<Context, StateType, TriggerType>,
+    failure: TransitionFailure<Context, TriggerType>,
     message: string,
     {
       shouldThrowException,
     }: {
       shouldThrowException: boolean;
     }
-  ): TransitionResult<StateType, TriggerType, Context> {
-    const result = this.__prepareTransitionResult(pending, {
+  ): TransitionResult<Context, StateType, TriggerType> {
+    const result = this.___prepareTransitionResult(pending, {
       success: false,
       failure,
     });
@@ -247,19 +254,19 @@ export class StateMachine<
         message,
         result: result,
       });
-    if (this.__options.verbose) console.info(message);
+    if (this.___options.verbose) console.info(message);
 
     return result;
   }
 
-  private __getOriginsFromTransitions(
-    transitions: Transition<StateType, TriggerType, Context>[]
+  private ___getOriginsFromTransitions(
+    transitions: Transition<Context, StateType, TriggerType>[]
   ) {
     return Array.from(
       transitions.reduce(
         (
           acc: Set<StateType>,
-          curr: Transition<StateType, TriggerType, Context>
+          curr: Transition<Context, StateType, TriggerType>
         ) => {
           normalizeArray(curr.origins).forEach((item) => acc.add(item));
           return acc;
@@ -270,7 +277,7 @@ export class StateMachine<
   }
 
   to(state: StateType) {
-    if (!this.__states.includes(state)) {
+    if (!this.___states.includes(state)) {
       const message = `Destination ${state} is not included in the list of existing states`;
       throw new TransitionError({
         name: "DestinationInvalid",
@@ -278,24 +285,24 @@ export class StateMachine<
         result: null,
       });
     }
-    this.__setState(state);
+    this.___setState(state);
   }
 
   triggerWithOptions(
     trigger: TriggerType,
     props: TransitionProps,
     options: TransitionOptions<Context>
-  ): TransitionResult<StateType, TriggerType, Context>;
+  ): TransitionResult<Context, StateType, TriggerType>;
   triggerWithOptions(
     trigger: TriggerType,
     options: TransitionOptions<Context>
-  ): TransitionResult<StateType, TriggerType, Context>;
+  ): TransitionResult<Context, StateType, TriggerType>;
 
   triggerWithOptions(
     trigger: TriggerType,
     secondParameter?: TransitionProps | TransitionOptions<Context>,
     thirdParameter?: TransitionOptions<Context>
-  ): TransitionResult<StateType, TriggerType, Context> {
+  ): TransitionResult<Context, StateType, TriggerType> {
     let passedProps: TransitionProps | undefined = undefined;
     let passedOptions: TransitionOptions<Context> | undefined = undefined;
 
@@ -317,30 +324,30 @@ export class StateMachine<
     trigger: TriggerType,
     props?: TransitionProps,
     options?: TransitionOptions<Context>
-  ): TransitionResult<StateType, TriggerType, Context> {
+  ): TransitionResult<Context, StateType, TriggerType> {
     // Generate a pending transition result to track state transition history
-    const pending = this.__createPendingTransitionResult();
-    const attempts: TransitionAttempt<StateType, TriggerType, Context>[] = [];
+    const pending = this.___createPendingTransitionResult();
+    const attempts: TransitionAttempt<Context, StateType, TriggerType>[] = [];
 
     // Unpack and configure options for current transition
     const { onError, throwExceptions }: TransitionOptions<Context> =
       options ?? {};
     const shouldThrowException =
-      throwExceptions ?? this.__options.throwExceptions;
+      throwExceptions ?? this.___options.throwExceptions;
 
-    const transitions = normalizeArray(this.__instructions[trigger]);
+    const transitions = normalizeArray(this.___instructions[trigger]);
 
     // If the transitions don't exist trigger key did not exist
     if (!transitions.length) {
       // Handle trigger undefined
-      return this.__handleFailure(
+      return this.___handleFailure(
         pending,
         {
           type: "TriggerUndefined",
           method: null,
           undefined: true,
           trigger,
-          context: this.__getCurrentContext(),
+          context: this.___getCurrentContext(),
         },
         `Trigger "${trigger}" is not defined in the machine.`,
         { shouldThrowException }
@@ -349,21 +356,21 @@ export class StateMachine<
 
     // Get a set of all origins
     // We can do this before looping over so we do.
-    const origins = this.__getOriginsFromTransitions(transitions);
+    const origins = this.___getOriginsFromTransitions(transitions);
 
     // If the transition picked does not have the current state listed in any origins
-    if (!origins.includes(this.__getState())) {
+    if (!origins.includes(this.___getState())) {
       // Handle Origin Disallowed
-      return this.__handleFailure(
+      return this.___handleFailure(
         pending,
         {
           type: "OriginDisallowed",
           method: null,
           undefined: false,
           trigger,
-          context: this.__getCurrentContext(),
+          context: this.___getCurrentContext(),
         },
-        `Invalid transition from ${this.__getState()} using trigger ${trigger}`,
+        `Invalid transition from ${this.___getState()} using trigger ${trigger}`,
         { shouldThrowException }
       );
     }
@@ -376,13 +383,13 @@ export class StateMachine<
     transitionLoop: for (let i = 0; i < transitions.length; i++) {
       const transition = transitions[i];
       const nextTransition:
-        | Transition<StateType, TriggerType, Context>
+        | Transition<Context, StateType, TriggerType>
         | undefined = transitions?.[i + 1];
 
       const transitionAttempt: TransitionAttempt<
+        Context,
         StateType,
-        TriggerType,
-        Context
+        TriggerType
       > = {
         name: trigger,
         success: false,
@@ -390,7 +397,7 @@ export class StateMachine<
         conditions: [],
         effects: [],
         transition,
-        context: this.__getCurrentContext(),
+        context: this.___getCurrentContext(),
       };
       attempts.push(transitionAttempt);
 
@@ -401,31 +408,31 @@ export class StateMachine<
       for (let j = 0; j < conditions.length; j++) {
         const condition = conditions[j];
         const conditionFunction: Context[keyof Context] | undefined =
-          this.__context[condition as keyof Context]; // As keyof Context is dangerous but we handle undefined errors
+          this.___context[condition as keyof Context]; // As keyof Context is dangerous but we handle undefined errors
 
         // Create the Condition attempt
         const conditionAttempt: ConditionAttempt<Context> = {
           name: condition,
           success: false,
-          context: this.__getCurrentContext(),
+          context: this.___getCurrentContext(),
         };
         transitionAttempt.conditions.push(conditionAttempt);
 
         // Check if the method exists
         if (conditionFunction === undefined) {
           // Handle ConditionUndefined error
-          const failure: TransitionFailure<TriggerType, Context> = {
+          const failure: TransitionFailure<Context, TriggerType> = {
             type: "ConditionUndefined",
             method: condition,
             undefined: true,
             trigger,
-            context: this.__getCurrentContext(),
+            context: this.___getCurrentContext(),
           };
 
-          // TODO: Refactor this. The point of abstracting __handleFailure was to separate this.
+          // TODO: Refactor this. The point of abstracting ___handleFailure was to separate this.
           transitionAttempt.failure = failure;
 
-          return this.__handleFailure(
+          return this.___handleFailure(
             pending,
             failure,
             `Condition ${String(condition)} is not defined in the machine.`,
@@ -436,27 +443,27 @@ export class StateMachine<
         // Check if condition passes falsey
         // This abstraction is necessary to support the reactive version of this state machine
         if (
-          !this.__options.conditionEvaluator(conditionFunction, this.__context)
+          !this.___options.conditionEvaluator(conditionFunction, this.___context)
         ) {
           const message = `Condition ${String(condition)} false. `;
-          const failure: TransitionFailure<TriggerType, Context> = {
+          const failure: TransitionFailure<Context, TriggerType> = {
             type: "ConditionValue",
             method: condition,
             undefined: false,
             trigger,
-            context: this.__getCurrentContext(),
+            context: this.___getCurrentContext(),
           };
-          // TODO: Refactor this. The point of abstracting __handleFailure was to separate this.
+          // TODO: Refactor this. The point of abstracting ___handleFailure was to separate this.
           transitionAttempt.failure = failure;
 
           // Don't fail on bad conditions if there is a possibility for a next transition to succeed
           if (nextTransition) {
-            if (this.__options.verbose)
+            if (this.___options.verbose)
               console.info(message + " Skipping to next transition.");
             transitionAttempt.failure = failure;
             continue transitionLoop;
           } else {
-            return this.__handleFailure(
+            return this.___handleFailure(
               pending,
               failure,
               message + " Transition aborted.",
@@ -475,30 +482,30 @@ export class StateMachine<
       for (let j = 0; j < effects.length; j++) {
         const effect = effects[j];
         const effectFunction: Context[keyof Context] | undefined =
-          this.__context[effect as keyof Context]; // As keyof Context is dangerous but we handle undefined errors
+          this.___context[effect as keyof Context]; // As keyof Context is dangerous but we handle undefined errors
 
         // Create the Effect attempt
         const effectAttempt: EffectAttempt<Context> = {
           name: effect,
           success: false,
-          context: this.__getCurrentContext(),
+          context: this.___getCurrentContext(),
         };
         transitionAttempt.effects.push(effectAttempt);
 
         // Check if the method is of type function
         if (typeof effectFunction !== "function") {
-          const failure: TransitionFailure<TriggerType, Context> = {
+          const failure: TransitionFailure<Context, TriggerType> = {
             type: "EffectUndefined",
             method: effect,
             undefined: true,
             trigger,
-            context: this.__getCurrentContext(),
+            context: this.___getCurrentContext(),
           };
 
-          // TODO: Refactor this. The point of abstracting __handleFailure was to separate this.
+          // TODO: Refactor this. The point of abstracting ___handleFailure was to separate this.
           transitionAttempt.failure = failure;
 
-          return this.__handleFailure(
+          return this.___handleFailure(
             pending,
             failure,
             `Effect ${String(effect)} is not defined in the machine.`,
@@ -508,20 +515,20 @@ export class StateMachine<
 
         try {
           transitionAttempt.failure = null;
-          effectFunction.call(this.__context, props);
+          effectFunction.call(this.___context, props);
         } catch (e) {
-          const failure: TransitionFailure<TriggerType, Context> = {
+          const failure: TransitionFailure<Context, TriggerType> = {
             type: "EffectError",
             method: effect,
             undefined: false,
             trigger,
-            context: this.__getCurrentContext(),
+            context: this.___getCurrentContext(),
           };
 
-          // TODO: Refactor this. The point of abstracting __handleFailure was to separate this.
+          // TODO: Refactor this. The point of abstracting ___handleFailure was to separate this.
           transitionAttempt.failure = failure;
 
-          const response = this.__handleFailure(
+          const response = this.___handleFailure(
             pending,
             failure,
             `Effect ${String(effect)} caused an error.`,
@@ -541,14 +548,14 @@ export class StateMachine<
       }
 
       // Change the state to the destination state
-      this.__setState(transition.destination);
+      this.___setState(transition.destination);
 
       transitionAttempt.success = true;
 
       break transitionLoop;
     }
 
-    const result = this.__prepareTransitionResult(pending, {
+    const result = this.___prepareTransitionResult(pending, {
       success: true,
       failure: null,
     });
@@ -557,19 +564,19 @@ export class StateMachine<
 
   get potentialTransitions() {
     const potentialTransitions: AvailableTransition<
+      Context,
       StateType,
-      TriggerType,
-      Context
+      TriggerType
     >[] = [];
-    const currentState = this.__getState();
+    const currentState = this.___getState();
 
     for (const [trigger, transitionList] of Object.entries(
-      this.__instructions
+      this.___instructions
     )) {
       const transitions = normalizeArray(transitionList) as Transition<
+        Context,
         StateType,
-        TriggerType,
-        Context
+        TriggerType
       >[];
 
       for (const transition of transitions) {
@@ -582,7 +589,7 @@ export class StateMachine<
 
             try {
               const conditionFunction: Context[keyof Context] | undefined =
-                this.__context[condition as keyof Context];
+                this.___context[condition as keyof Context];
 
               if (conditionFunction === undefined) {
                 throw new Error(
@@ -590,9 +597,9 @@ export class StateMachine<
                 );
               }
 
-              satisfied = this.__options.conditionEvaluator(
+              satisfied = this.___options.conditionEvaluator(
                 conditionFunction,
-                this.__context
+                this.___context
               );
             } catch (error) {
               console.error(
@@ -638,31 +645,31 @@ export class StateMachine<
 }
 
 export function addStateMachine<
+  Context extends SimpleStateful<StateType>,
   StateType,
-  TriggerType extends string,
-  Context extends SimpleStateful<StateType>
+  TriggerType extends string
 >(
   context: Context,
   instructions:
-    | TransitionInstructions<StateType, TriggerType, Context>
+    | TransitionInstructions<Context, StateType, TriggerType>
     | StateList<StateType>,
   options?: StateMachineOptions<
-    StateType,
     Context,
+    StateType,
     SimpleStateful<StateType>,
     "state"
   >
 ): Context &
   StateMachine<
+    Context,
     StateType,
     TriggerType,
     SimpleStateful<StateType>,
-    "state",
-    Context
+    "state"
   > {
   const internalOptions: StateMachineInternalOptions<
-    StateType,
     Context,
+    StateType,
     SimpleStateful<StateType>,
     "state"
   > = {
@@ -677,11 +684,11 @@ export function addStateMachine<
   const proxy = new Proxy(
     context as Context &
       StateMachine<
+        Context,
         StateType,
         TriggerType,
         SimpleStateful<StateType>,
-        "state",
-        Context
+        "state"
       >,
     {
       get(target, prop, receiver) {

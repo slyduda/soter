@@ -34,9 +34,9 @@ export class Matter {
 }
 
 export const matterMachineDict: TransitionInstructions<
+  Matter,
   MatterState,
-  MatterTrigger,
-  Matter
+  MatterTrigger
 > = {
   melt: [
     {

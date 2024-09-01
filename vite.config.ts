@@ -2,6 +2,7 @@
 import { resolve } from "path";
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
+import terser from "@rollup/plugin-terser";
 
 export default defineConfig({
   build: {
@@ -12,5 +13,14 @@ export default defineConfig({
       formats: ["es", "cjs"],
     },
   },
-  plugins: [dts()],
+  plugins: [
+    dts(),
+    terser({
+      mangle: {
+        properties: {
+          regex: /^___/,
+        },
+      },
+    }),
+  ],
 });

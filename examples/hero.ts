@@ -22,9 +22,9 @@ export class Hero {
 }
 
 export const heroMachineDict: TransitionInstructions<
+  Hero,
   HeroState,
-  HeroTrigger,
-  Hero
+  HeroTrigger
 > = {
   patrol: [
     {

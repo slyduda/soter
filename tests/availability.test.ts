@@ -13,6 +13,5 @@ test("check to see if potential transitions works", () => {
 test("check to see if potential transitions with state list works", () => {
   const hero = addStateMachine(new Hero("idle"), ["idle", "sleeping"]);
   const potential = hero.potentialTransitions;
-  console.log(potential);
   expect(potential.filter((transition) => transition.satisfied).length).toBe(1);
 });
