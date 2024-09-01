@@ -1,4 +1,4 @@
-import { addStateMachine, StateMachine } from "./machine";
+import { machine, StateMachine } from "./machine";
 import type {
   Transition,
   TransitionInstructions,
@@ -8,7 +8,7 @@ import type {
 } from "./types";
 
 export {
-  addStateMachine,
+  machine,
   StateMachine,
   Transition,
   TransitionInstructions,

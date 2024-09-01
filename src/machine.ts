@@ -632,7 +632,7 @@ export class StateMachine<
   }
 }
 
-export function addStateMachine<
+export function machine<
   Context extends SimpleStateful<State>,
   State,
   Trigger extends string

@@ -1,6 +1,6 @@
 import { bench, describe } from "vitest";
 import { exampleMachineDict, ExampleObject } from "../examples";
-import { addStateMachine } from "../src";
+import { machine } from "../src";
 
 describe("state machine initialization", () => {
   bench("no state machine", () => {
@@ -9,6 +9,6 @@ describe("state machine initialization", () => {
 
   bench("class based w/ mixin", () => {
     const myObject = new ExampleObject();
-    addStateMachine(myObject, exampleMachineDict);
+    machine(myObject, exampleMachineDict);
   });
 });

@@ -1,10 +1,10 @@
 import { expect, test } from "vitest";
-import { addStateMachine } from "../src";
+import { machine } from "../src";
 import { Matter, matterMachineDict, MatterState } from "../examples/physics";
 
 test("check to see if onBeforeTransition works", () => {
   let beforeTransitionState: MatterState | null = null;
-  const matter = addStateMachine(new Matter("solid", 10), matterMachineDict, {
+  const matter = machine(new Matter("solid", 10), matterMachineDict, {
     onBeforeTransition: (plannedState, state, context) => {
       beforeTransitionState = context.state;
     },
@@ -15,7 +15,7 @@ test("check to see if onBeforeTransition works", () => {
 
 test("check to see if onTransition works", () => {
   let postTransitionState: MatterState | null = null;
-  const matter = addStateMachine(new Matter("solid", 10), matterMachineDict, {
+  const matter = machine(new Matter("solid", 10), matterMachineDict, {
     onTransition: (state, oldState, context) => {
       postTransitionState = context.state;
     },

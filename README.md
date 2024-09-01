@@ -13,7 +13,7 @@ npm install @olympos/soter
 Here is a simple example of how to leverage `Soter`:
 
 ```ts
-const matterMachine = addStateMachine(
+const matterMachine = machine(
   {
     state: "solid",
   },
@@ -61,7 +61,7 @@ const matterMachineDict: TransitionInstructions<
 };
 
 // Initialize a Matter object and attach a state machine to it
-const matter = addStateMachine(new Matter("solid"), matterMachineDict);
+const matter = machine(new Matter("solid"), matterMachineDict);
 console.log(matter.state); // solid
 matter.trigger("melt"); // Trigger the melt transition
 console.log(matter.state); // liquid
@@ -112,7 +112,7 @@ You can create a very simple working state machine bound to `matter` like this:
 ```ts
 import {} from "@olympos/soter";
 
-const matterMachine = addStateMachine(matter, ["solid", "liquid"]);
+const matterMachine = machine(matter, ["solid", "liquid"]);
 ```
 
 You can now transition your state machine to any destination listed in the list above:
@@ -122,7 +122,7 @@ matterMachine.to("liquid");
 console.log(matterMachine.state); // liquid
 ```
 
-Calling `addStateMachine` on `matter` creates `matterMachine` which includes all of the base object's properties and methods while also attaching various state machine methods.
+Calling `machine` on `matter` creates `matterMachine` which includes all of the base object's properties and methods while also attaching various state machine methods.
 
 ## Transitions
 
@@ -131,7 +131,7 @@ Calling `addStateMachine` on `matter` creates `matterMachine` which includes all
 The `.to()` method is helpful for simple state transitions as demonstrated in the last example. Simply supply a state and if it exists transition to it without any checks or side effects.
 
 ```ts
-const matter = addStateMachine(
+const matter = machine(
   {
     state: "solid",
   }, // The object
@@ -189,7 +189,7 @@ const TransitionInstructions: TransitionInstructions<
   },
 };
 
-const hero = addStateMachine(new Hero("idle"), TransitionInstructions);
+const hero = machine(new Hero("idle"), TransitionInstructions);
 hero.trigger("patrol");
 // The hero is expending energy!
 hero.trigger("patrol"); // No log because condition is not met so the hero does not work
@@ -245,7 +245,7 @@ One caveat is that we don't get type inference on the props, but you may cast th
 The initial state machine may be configured with any of the following options like so:
 
 ```ts
-const matter = addStateMachine(new Matter(), matterTransitionInstructions, {
+const matter = machine(new Matter(), matterTransitionInstructions, {
   verbosity: false,
   throwExceptions: false,
   strictOrigins: false,
@@ -310,7 +310,7 @@ export const exampleMachineDict: TransitionInstructions<
 };
 
 const myObject = new ExampleObject(1);
-const objectMachine = addStateMachine(myObject, exampleMachineDict);
+const objectMachine = machine(myObject, exampleMachineDict);
 objectMachine.trigger("walk");
 objectMachine.trigger("stop");
 const response = objectMachine.trigger("walk"); // Will fail

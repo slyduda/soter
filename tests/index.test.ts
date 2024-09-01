@@ -4,13 +4,13 @@ import {
   ExampleObject,
   ExampleObjectState,
 } from "../examples";
-import { addStateMachine } from "../src";
+import { machine } from "../src";
 
 // This test initializes the ExampleObject
 // We trigger the walk transition which by default transitions the object to walking state
 test("check to see if state machine can transition", () => {
   const myObject = new ExampleObject();
-  const objectMachine = addStateMachine(myObject, exampleMachineDict);
+  const objectMachine = machine(myObject, exampleMachineDict);
   expect(myObject.state).toBe<ExampleObjectState>("stopped");
   objectMachine.trigger("walk");
   expect(myObject.state).toBe<ExampleObjectState>("walking");
@@ -20,7 +20,7 @@ test("check to see if state machine can transition", () => {
 // We trigger the walk transition which checks to see if energy is > 0
 test("check to see if conditions work", () => {
   const myObject = new ExampleObject(0);
-  const objectMachine = addStateMachine(myObject, exampleMachineDict, {
+  const objectMachine = machine(myObject, exampleMachineDict, {
     throwExceptions: false,
   });
   expect(myObject.state).toBe<ExampleObjectState>("stopped");
@@ -32,7 +32,7 @@ test("check to see if conditions work", () => {
 // We trigger the walk transition which reduces energy by 1
 test("check to see if effects work", () => {
   const myObject = new ExampleObject(1);
-  const objectMachine = addStateMachine(myObject, exampleMachineDict);
+  const objectMachine = machine(myObject, exampleMachineDict);
   expect(myObject.state).toBe<ExampleObjectState>("stopped");
   objectMachine.trigger("walk");
   expect(myObject.energy).toBe(0);
