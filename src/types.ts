@@ -18,9 +18,9 @@ type Condition<Context> = keyof Context | string;
 export const isFunction = (obj: unknown): obj is CallableFunction =>
   obj instanceof Function;
 
-export type Transition<Context, StateType, TriggerType> = {
-  origins: StateType | StateType[];
-  destination: StateType;
+export type Transition<Context, State, Trigger> = {
+  origins: State | State[];
+  destination: State;
   conditions?: Condition<Context> | Condition<Context>[];
   effects?: Effect<Context> | Effect<Context>[];
 };
@@ -37,54 +37,55 @@ export type EffectAttempt<Context> = {
   context: Context | null;
 };
 
-export type TransitionAttempt<Context, StateType, TriggerType> = {
-  name: TriggerType;
+export type TransitionAttempt<Context, State, Trigger> = {
+  name: Trigger;
   success: boolean;
-  failure: TransitionFailure<Context, TriggerType> | null;
+  failure: TransitionFailure<Context, State, Trigger> | null;
   conditions: ConditionAttempt<Context>[];
   effects: EffectAttempt<Context>[];
-  transition: Transition<Context, StateType, TriggerType>;
+  transition: Transition<Context, State, Trigger>;
   context: Context | null;
 };
 
-export type TransitionFailure<Context, TriggerType> = {
+export type TransitionFailure<Context, State, Trigger> = {
   type: ErrorName;
   undefined: boolean;
-  trigger: TriggerType | null;
+  trigger: Trigger | null;
   method: Condition<Context> | Effect<Context> | null;
   context: Context | null;
 };
 
-export type PendingTransitionResult<Context, StateType, TriggerType> = {
+export type PendingTransitionResult<Context, State, Trigger> = {
   success: boolean | null; // Whether the Transition was successful or not
-  failure: TransitionFailure<Context, TriggerType> | null;
-  initial: StateType;
-  current: StateType | null;
-  attempts: TransitionAttempt<Context, StateType, TriggerType>[] | null;
+  failure: TransitionFailure<Context, State, Trigger> | null;
+  initial: State;
+  current: State | null;
+  attempts: TransitionAttempt<Context, State, Trigger>[] | null;
   precontext: Context;
   context: Context | null;
 };
 
-export type TransitionResult<Context, StateType, TriggerType> = {
+export type TransitionResult<Context, State, Trigger> = {
   success: boolean; // Whether the Transition was successful or not
-  failure: TransitionFailure<Context, TriggerType> | null;
-  initial: StateType;
-  current: StateType;
-  attempts: TransitionAttempt<Context, StateType, TriggerType>[];
+  failure: TransitionFailure<Context, State, Trigger> | null;
+  initial: State;
+  current: State;
+  attempts: TransitionAttempt<Context, State, Trigger>[];
   precontext: Context;
   context: Context;
 };
 
-export type TransitionInstructions<Context, StateType, TriggerType extends string> = {
-  [K in TriggerType]:
-    | Transition<Context, StateType, TriggerType>
-    | Transition<Context, StateType, TriggerType>[];
+export type TransitionInstructions<Context, State, Trigger extends string> = {
+  [K in Trigger]:
+    | Transition<Context, State, Trigger>
+    | Transition<Context, State, Trigger>[];
 };
-export type StateList<StateType> = StateType[];
+export type StateList<State> = State[];
 
 export type StateMachineOptions<
   Context,
-  StateType,
+  State,
+  Trigger,
   Stateful,
   K extends keyof Stateful
 > = {
@@ -93,22 +94,23 @@ export type StateMachineOptions<
   strictOrigins?: boolean;
   conditionEvaluator?: (conditionFunction: any, context: Context) => boolean;
   onBeforeTransition?: (
-    plannedState: StateType,
-    state: StateType,
+    plannedState: State,
+    state: State,
     context: Context,
-    self: StateMachine<any, StateType, string, Stateful, K>
+    self: StateMachine<any, State, string, Stateful, K>
   ) => void;
   onTransition?: (
-    state: StateType,
-    oldState: StateType,
+    state: State,
+    oldState: State,
     context: Context,
-    self: StateMachine<any, StateType, string, Stateful, K>
+    self: StateMachine<any, State, string, Stateful, K>
   ) => void;
 };
 
 export type StateMachineInternalOptions<
   Context,
-  StateType,
+  State,
+  Trigger,
   Stateful,
   K extends keyof Stateful
 > = {
@@ -121,29 +123,30 @@ export type StateMachineInternalOptions<
   getState: <Context extends Stateful>(
     context: Context,
     key: keyof Stateful
-  ) => StateType;
+  ) => State;
   setState: <Context extends Stateful>(
     context: Context,
-    state: StateType,
+    state: State,
     key: keyof Stateful
   ) => void;
   onBeforeTransition?: (
-    plannedState: StateType,
-    state: StateType,
+    plannedState: State,
+    state: State,
     context: Context,
-    self: StateMachine<any, StateType, string, Stateful, K>
+    self: StateMachine<any, State, string, Stateful, K>
   ) => void;
   onTransition?: (
-    state: StateType,
-    oldState: StateType,
+    state: State,
+    oldState: State,
     context: Context,
-    self: StateMachine<any, StateType, string, Stateful, K>
+    self: StateMachine<any, State, string, Stateful, K>
   ) => void;
 };
 
 export type StateMachineConfig<
   Context,
-  StateType,
+  State,
+  Trigger,
   Stateful,
   K extends keyof Stateful
 > = {
@@ -156,23 +159,23 @@ export type StateMachineConfig<
   getState: <Context extends Stateful>(
     context: Context,
     key: keyof Stateful
-  ) => StateType;
+  ) => State;
   setState: <Context extends Stateful>(
     context: Context,
-    state: StateType,
+    state: State,
     key: keyof Stateful
   ) => void;
   onBeforeTransition: (
-    plannedState: StateType,
-    state: StateType,
+    plannedState: State,
+    state: State,
     context: Context,
-    self: StateMachine<any, StateType, string, Stateful, K>
+    self: StateMachine<any, State, string, Stateful, K>
   ) => void;
   onTransition: (
-    state: StateType,
-    oldState: StateType,
+    state: State,
+    oldState: State,
     context: Context,
-    self: StateMachine<any, StateType, string, Stateful, K>
+    self: StateMachine<any, State, string, Stateful, K>
   ) => void;
 };
 
@@ -183,10 +186,10 @@ export type TransitionOptions<Context> = {
 
 export type TransitionProps = {};
 
-export type AvailableTransition<Context, StateType, TriggerType> = {
-  trigger: TriggerType;
-  origins: StateType[];
-  destination: StateType;
+export type AvailableTransition<Context, State, Trigger> = {
+  trigger: Trigger;
+  origins: State[];
+  destination: State;
   satisfied: boolean;
   conditions: {
     name: Condition<Context>;

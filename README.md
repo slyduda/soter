@@ -126,7 +126,7 @@ Calling `addStateMachine` on `matter` creates `matterMachine` which includes all
 
 ## Transitions
 
-### .to(state: StateType)
+### .to(state: State)
 
 The `.to()` method is helpful for simple state transitions as demonstrated in the last example. Simply supply a state and if it exists transition to it without any checks or side effects.
 
@@ -143,7 +143,7 @@ matter.to("liquid");
 console.log(matter.state); // liquid
 ```
 
-### .trigger(trigger: TriggerType, options?: TransitionOptions)
+### .trigger(trigger: Trigger, options?: TransitionOptions)
 
 In most use cases where finite state machines are needed, it is often helpful to have additional logic that happens before, during, and after transitions. This is where the `.trigger()` method is helpful.
 
