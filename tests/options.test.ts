@@ -1,10 +1,10 @@
 import { expect, test } from "vitest";
 import { matterMachineDict, Matter, MatterState } from "../examples/physics";
-import { machine } from "../src";
+import { soter } from "../src";
 
 test("check to see if we can throw exceptions with machine.options.exceptions = true", () => {
   const matter = new Matter("solid");
-  const objectMachine = machine(matter, matterMachineDict, {
+  const objectMachine = soter(matter, matterMachineDict, {
     throwExceptions: false,
   });
   expect(matter.temperature).toBe(0);
@@ -14,7 +14,7 @@ test("check to see if we can throw exceptions with machine.options.exceptions = 
 
 test("check to see if we can throw exceptions with options.throwExceptions = true", () => {
   const matter = new Matter("solid");
-  const objectMachine = machine(matter, matterMachineDict, {
+  const objectMachine = soter(matter, matterMachineDict, {
     throwExceptions: false,
   });
   expect(matter.temperature).toBe(0);

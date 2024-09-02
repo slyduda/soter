@@ -13,7 +13,7 @@ npm install @olympos/soter
 Here is a simple example of how to leverage `Soter`:
 
 ```ts
-const matterMachine = machine(
+const matterMachine = soter(
   {
     state: "solid",
   },
@@ -49,11 +49,7 @@ class Matter {
   }
 }
 
-const matterMachineDict: TransitionInstructions<
-  MatterState,
-  MatterTrigger,
-  Matter
-> = {
+const matterMachineDict: InstructionMap<MatterState, MatterTrigger, Matter> = {
   melt: { origins: "solid", destination: "liquid" },
   evaporate: { origins: "liquid", destination: "gas" },
   sublimate: { origins: "solid", destination: "gas" },
@@ -61,7 +57,7 @@ const matterMachineDict: TransitionInstructions<
 };
 
 // Initialize a Matter object and attach a state machine to it
-const matter = machine(new Matter("solid"), matterMachineDict);
+const matter = soter(new Matter("solid"), matterMachineDict);
 console.log(matter.state); // solid
 matter.trigger("melt"); // Trigger the melt transition
 console.log(matter.state); // liquid
@@ -73,7 +69,7 @@ A state machine is a model of behavior composed of a finite number of states and
 
 - `State`: A condition or stage in a state machine. A `State` can describe a phase in a process or a mode of behavior.
 
-- `Transition`: A process or event that causes the state machine to change from one state to another.
+- `InstructionRecord`: A process or event that causes the state machine to change from one state to another.
 
 - `Model`: An entity that gets updated during transitions. It may also define actions that will be executed during transitions. This is also described as context.
 
@@ -112,7 +108,7 @@ You can create a very simple working state machine bound to `matter` like this:
 ```ts
 import {} from "@olympos/soter";
 
-const matterMachine = machine(matter, ["solid", "liquid"]);
+const matterMachine = soter(matter, ["solid", "liquid"]);
 ```
 
 You can now transition your state machine to any destination listed in the list above:
@@ -131,7 +127,7 @@ Calling `machine` on `matter` creates `matterMachine` which includes all of the 
 The `.to()` method is helpful for simple state transitions as demonstrated in the last example. Simply supply a state and if it exists transition to it without any checks or side effects.
 
 ```ts
-const matter = machine(
+const matter = soter(
   {
     state: "solid",
   }, // The object
@@ -148,7 +144,7 @@ console.log(matter.state); // liquid
 In most use cases where finite state machines are needed, it is often helpful to have additional logic that happens before, during, and after transitions. This is where the `.trigger()` method is helpful.
 
 ```ts
-import { TransitionInstructions } from "@olympos/soter";
+import { InstructionMap } from "@olympos/soter";
 
 type HeroState = "idle" | "sleeping";
 type HeroTrigger = "patrol" | "sleep";
@@ -172,11 +168,7 @@ class Hero {
   }
 }
 
-const TransitionInstructions: TransitionInstructions<
-  HeroState,
-  HeroTrigger,
-  Hero
-> = {
+const InstructionMap: InstructionMap<HeroState, HeroTrigger, Hero> = {
   patrol: {
     origins: "idle",
     destination: "idle",
@@ -189,7 +181,7 @@ const TransitionInstructions: TransitionInstructions<
   },
 };
 
-const hero = machine(new Hero("idle"), TransitionInstructions);
+const hero = soter(new Hero("idle"), InstructionMap);
 hero.trigger("patrol");
 // The hero is expending energy!
 hero.trigger("patrol"); // No log because condition is not met so the hero does not work
@@ -218,7 +210,7 @@ export class Matter {
   }
 }
 
-export const matterMachineDict: TransitionInstructions<
+export const matterMachineDict: InstructionMap<
   MatterState,
   MatterTrigger,
   Matter
@@ -245,7 +237,7 @@ One caveat is that we don't get type inference on the props, but you may cast th
 The initial state machine may be configured with any of the following options like so:
 
 ```ts
-const matter = machine(new Matter(), matterTransitionInstructions, {
+const matter = soter(new Matter(), matterTransitionInstructions, {
   verbosity: false,
   throwExceptions: false,
   strictOrigins: false,
@@ -292,7 +284,7 @@ export class ExampleObject {
   }
 }
 
-export const exampleMachineDict: TransitionInstructions<
+export const exampleMachineDict: InstructionMap<
   ExampleObjectState,
   ExampleObjectTrigger,
   ExampleObject
@@ -310,7 +302,7 @@ export const exampleMachineDict: TransitionInstructions<
 };
 
 const myObject = new ExampleObject(1);
-const objectMachine = machine(myObject, exampleMachineDict);
+const objectMachine = soter(myObject, exampleMachineDict);
 objectMachine.trigger("walk");
 objectMachine.trigger("stop");
 const response = objectMachine.trigger("walk"); // Will fail

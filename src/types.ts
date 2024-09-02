@@ -11,18 +11,27 @@ export type ErrorName =
 
 // Key of Context ensures only methods of Context can be used as effects
 // This req was dropped in 0.0.10 in order to allow the flexibility of simple examples
-// Transition failures from typeguards and exceptions will be how we handle string types
-type Effect<Context> = keyof Context | string;
-type Condition<Context> = keyof Context | string;
+// InstructionRecord failures from typeguards and exceptions will be how we handle string types
+type Effect<Context> = keyof Context | (string & {});
+type Condition<Context> = keyof Context | (string & {});
 
 export const isFunction = (obj: unknown): obj is CallableFunction =>
   obj instanceof Function;
 
-export type Transition<Context, State, Trigger> = {
+export type InstructionRecord<State, Trigger = string, Context = {}> = {
   origins: State | State[];
   destination: State;
   conditions?: Condition<Context> | Condition<Context>[];
   effects?: Effect<Context> | Effect<Context>[];
+};
+export type InstructionMap<
+  State,
+  Trigger extends string = string,
+  Context = {}
+> = {
+  [K in Trigger]:
+    | InstructionRecord<State, Trigger, Context>
+    | InstructionRecord<State, Trigger, Context>[];
 };
 
 export type ConditionAttempt<Context> = {
@@ -37,17 +46,17 @@ export type EffectAttempt<Context> = {
   context: Context | null;
 };
 
-export type TransitionAttempt<Context, State, Trigger> = {
+export type TransitionAttempt<State, Trigger, Context> = {
   name: Trigger;
   success: boolean;
-  failure: TransitionFailure<Context, State, Trigger> | null;
+  failure: TransitionFailure<State, Trigger, Context> | null;
   conditions: ConditionAttempt<Context>[];
   effects: EffectAttempt<Context>[];
-  transition: Transition<Context, State, Trigger>;
+  transition: InstructionRecord<State, Trigger, Context>;
   context: Context | null;
 };
 
-export type TransitionFailure<Context, State, Trigger> = {
+export type TransitionFailure<State, Trigger, Context> = {
   type: ErrorName;
   undefined: boolean;
   trigger: Trigger | null;
@@ -55,31 +64,26 @@ export type TransitionFailure<Context, State, Trigger> = {
   context: Context | null;
 };
 
-export type PendingTransitionResult<Context, State, Trigger> = {
-  success: boolean | null; // Whether the Transition was successful or not
-  failure: TransitionFailure<Context, State, Trigger> | null;
+export type PendingTransitionResult<State, Trigger, Context> = {
+  success: boolean | null; // Whether the InstructionRecord was successful or not
+  failure: TransitionFailure<State, Trigger, Context> | null;
   initial: State;
   current: State | null;
-  attempts: TransitionAttempt<Context, State, Trigger>[] | null;
+  attempts: TransitionAttempt<State, Trigger, Context>[] | null;
   precontext: Context;
   context: Context | null;
 };
 
-export type TransitionResult<Context, State, Trigger> = {
-  success: boolean; // Whether the Transition was successful or not
-  failure: TransitionFailure<Context, State, Trigger> | null;
+export type TransitionResult<State, Trigger, Context> = {
+  success: boolean; // Whether the InstructionRecord was successful or not
+  failure: TransitionFailure<State, Trigger, Context> | null;
   initial: State;
   current: State;
-  attempts: TransitionAttempt<Context, State, Trigger>[];
+  attempts: TransitionAttempt<State, Trigger, Context>[];
   precontext: Context;
   context: Context;
 };
 
-export type TransitionInstructions<Context, State, Trigger extends string> = {
-  [K in Trigger]:
-    | Transition<Context, State, Trigger>
-    | Transition<Context, State, Trigger>[];
-};
 export type StateList<State> = State[];
 
 export type StateMachineOptions<
@@ -186,7 +190,7 @@ export type TransitionOptions<Context> = {
 
 export type TransitionProps = {};
 
-export type AvailableTransition<Context, State, Trigger> = {
+export type AvailableTransition<State, Trigger, Context> = {
   trigger: Trigger;
   origins: State[];
   destination: State;

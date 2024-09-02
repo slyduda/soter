@@ -1,15 +1,15 @@
 import { expect, test } from "vitest";
-import { machine } from "../src";
+import { soter } from "../src";
 import { MatterState } from "../examples/physics";
 
 test("checks to see if we can make valid transitions with .to()", () => {
-  const matter = machine({ state: "solid" }, ["solid", "liquid"]);
+  const matter = soter({ state: "solid" }, ["solid", "liquid"]);
   matter.to("liquid");
   expect(matter.state).toBe("liquid");
 });
 
 test("checks to see if invalid transitions throw errors", () => {
-  const matter = machine({ state: "solid" }, [
+  const matter = soter({ state: "solid" }, [
     "solid",
     "liquid",
   ] as MatterState[]); // Cast simple state list as MatterState list to prevent error on next line
@@ -18,12 +18,12 @@ test("checks to see if invalid transitions throw errors", () => {
 });
 
 test("checks to see if we can make valid transitions with .trigger(`to_{destination}`) with state list", () => {
-  const matter = machine({ state: "solid" }, ["solid", "liquid"]);
+  const matter = soter({ state: "solid" }, ["solid", "liquid"]);
   matter.trigger("to_liquid");
   expect(matter.state).toBe("liquid");
 });
 
 test("checks to see if bad destination .trigger(`to_{destination}`) with state list causes error", () => {
-  const matter = machine({ state: "solid" }, ["solid", "liquid"]);
+  const matter = soter({ state: "solid" }, ["solid", "liquid"]);
   expect(() => matter.trigger("to_nonexistent")).toThrowError();
 });

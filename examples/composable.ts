@@ -1,3 +1,5 @@
+import { InstructionMap } from "../src";
+
 export type MatterState = "solid" | "liquid" | "gas" | "plasma";
 export type MatterTrigger = "melt";
 

@@ -1,4 +1,4 @@
-import { TransitionInstructions } from "../src";
+import { InstructionMap } from "../src";
 
 export type MatterState = "solid" | "liquid" | "gas" | "plasma";
 export type MatterTrigger =
@@ -33,10 +33,10 @@ export class Matter {
   }
 }
 
-export const matterMachineDict: TransitionInstructions<
-  Matter,
+export const matterMachineDict: InstructionMap<
   MatterState,
-  MatterTrigger
+  MatterTrigger,
+  Matter
 > = {
   melt: [
     {

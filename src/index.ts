@@ -1,17 +1,18 @@
-import { machine, StateMachine } from "./machine";
+import { instructions } from "./instructions";
+import { soter, StateMachine } from "./machine";
 import type {
-  Transition,
-  TransitionInstructions,
+  InstructionRecord,
+  InstructionMap,
   TransitionResult,
   TransitionOptions,
   StateMachineOptions,
 } from "./types";
 
 export {
-  machine,
+  soter,
   StateMachine,
-  Transition,
-  TransitionInstructions,
+  InstructionRecord,
+  InstructionMap,
   TransitionOptions,
   TransitionResult,
   StateMachineOptions,

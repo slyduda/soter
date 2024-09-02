@@ -1,4 +1,4 @@
-import { TransitionInstructions } from "../src";
+import { InstructionMap } from "../src";
 
 export type ExampleObjectState = "walking" | "stopped";
 export type ExampleObjectTrigger = "walk" | "stop";
@@ -28,10 +28,10 @@ export class ExampleObject {
   }
 }
 
-export const exampleMachineDict: TransitionInstructions<
-  ExampleObject,
+export const exampleMachineDict: InstructionMap<
   ExampleObjectState,
-  ExampleObjectTrigger
+  ExampleObjectTrigger,
+  ExampleObject
 > = {
   walk: {
     origins: ["stopped"],
