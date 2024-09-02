@@ -96,7 +96,7 @@ export class StateMachine<
     this.history = [];
     if (Array.isArray(instructions)) {
       this.___instructions = new InstructionMap(instructions);
-    } else if ("___instructions" in instructions) {
+    } else if ("___global" in instructions) {
       this.___instructions = instructions;
     } else {
       this.___instructions = new InstructionMap(instructions);
@@ -114,14 +114,6 @@ export class StateMachine<
       onTransition,
       onBeforeTransition,
     };
-  }
-
-  get states(): StateList<State> {
-    return this.___instructions.states;
-  }
-
-  get transitions(): InstructionDict<State, Trigger, Context> {
-    return this.___instructions.transitions;
   }
 
   private ___getState(): State {
@@ -227,6 +219,25 @@ export class StateMachine<
         new Set()
       )
     );
+  }
+
+  get states(): StateList<State> {
+    return this.___instructions.states;
+  }
+
+  get transitions(): InstructionDict<State, Trigger, Context> {
+    return this.___instructions.transitions;
+  }
+
+  addTransition(
+    trigger: string,
+    transition:
+      | InstructionRecord<State, Trigger, Context>
+      | InstructionRecord<State, Trigger, Context>[],
+    index?: number
+  ): StateMachine<Context, State, Trigger, Stateful, K> {
+    this.___instructions.addTransition(trigger, transition, index);
+    return this;
   }
 
   to(state: State) {

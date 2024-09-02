@@ -12,12 +12,14 @@ export class InstructionMap<
   Trigger extends string = string,
   Context = {}
 > extends Map<string, InstructionRecord<State, Trigger, Context>[]> {
-  ___instructions = true;
+  ___global: boolean;
 
   constructor(
-    instructions: InstructionDict<State, Trigger, Context> | StateList<State>
+    instructions: InstructionDict<State, Trigger, Context> | StateList<State>,
+    global?: boolean
   ) {
     super();
+    this.___global = global ?? false;
     const instruct = Array.isArray(instructions)
       ? this.___generateInstructions(instructions)
       : instructions;
@@ -137,5 +139,5 @@ export const instructions = <
 >(
   instructions: InstructionDict<State, Trigger, Context> | StateList<State>
 ) => {
-  return new InstructionMap(instructions);
+  return new InstructionMap(instructions, true);
 };

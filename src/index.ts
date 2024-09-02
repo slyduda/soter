@@ -10,6 +10,7 @@ import type {
 
 export {
   soter,
+  instructions,
   StateMachine,
   InstructionRecord,
   InstructionDict,

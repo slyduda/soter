@@ -1,5 +1,7 @@
 import { expect, test } from "vitest";
 import { instructions, InstructionMap } from "../src/instructions";
+import { soter } from "../src";
+import { matterMachineDict, useMatter } from "../examples/composable";
 
 type MatterState = "solid" | "liquid" | "gas" | "plasma" | "obsidian";
 const states: MatterState[] = ["solid", "liquid", "gas", "plasma"];
@@ -62,4 +64,29 @@ test("instruction addTransition", () => {
 test("instruction destructuring failure", () => {
   const { addState } = instructions(states);
   expect(() => addState("obsidian")).toThrowError("undefined");
+});
+
+test("instruction globals", () => {
+  const inst = instructions(states);
+  const matter1 = soter(useMatter("solid"), inst);
+  const matter2 = soter(useMatter("solid"), inst);
+  const matter3 = soter(useMatter("solid"), instructions(states));
+  inst.addState("obsidian");
+  matter1.to("obsidian");
+  matter2.to("obsidian");
+  expect(() => matter3.to("obsidian")).toThrowError("DestinationInvalid");
+});
+
+test("instruction globals from machine", () => {
+  const inst = instructions(states);
+  const matter1 = soter(useMatter("solid"), inst);
+  const matter2 = soter(useMatter("solid"), inst);
+  const matter3 = soter(useMatter("solid"), instructions(states));
+  matter1.addTransition("to_obsidian", {
+    origins: matter1.states,
+    destination: "obsidian",
+  });
+  matter1.trigger("to_obsidian");
+  matter2.trigger("to_obsidian");
+  expect(() => matter3.trigger("to_obsidian")).toThrowError("TriggerUndefined");
 });
