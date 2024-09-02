@@ -24,7 +24,7 @@ export type InstructionRecord<State, Trigger = string, Context = {}> = {
   conditions?: Condition<Context> | Condition<Context>[];
   effects?: Effect<Context> | Effect<Context>[];
 };
-export type InstructionMap<
+export type InstructionDict<
   State,
   Trigger extends string = string,
   Context = {}

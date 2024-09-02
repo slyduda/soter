@@ -1,4 +1,4 @@
-import { InstructionMap } from "../src";
+import { InstructionDict } from "../src";
 
 export type ExampleObjectState = "walking" | "stopped";
 export type ExampleObjectTrigger = "walk" | "stop";
@@ -28,7 +28,7 @@ export class ExampleObject {
   }
 }
 
-export const exampleMachineDict: InstructionMap<
+export const exampleMachineDict: InstructionDict<
   ExampleObjectState,
   ExampleObjectTrigger,
   ExampleObject

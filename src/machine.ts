@@ -1,9 +1,9 @@
 import { TransitionError } from "./errors";
-import { Instruction } from "./instructions";
+import { InstructionMap } from "./instructions";
 import type {
   ConditionAttempt,
   EffectAttempt,
-  InstructionMap,
+  InstructionDict,
   StateMachineOptions,
   InstructionRecord,
   TransitionAttempt,
@@ -68,14 +68,14 @@ export class StateMachine<
 
   private ___context: Context; // Maybe expose this as .value?
   private ___cache: Context | null;
-  private ___instructions: Instruction<State, Trigger, Context>;
+  private ___instructions: InstructionMap<State, Trigger, Context>;
   private ___config: StateMachineConfig<Context, State, Trigger, Stateful, K>;
 
   constructor(
     context: Context,
     instructions:
-      | Instruction<State, Trigger, Context>
       | InstructionMap<State, Trigger, Context>
+      | InstructionDict<State, Trigger, Context>
       | StateList<State>,
     options: StateMachineInternalOptions<Context, State, Trigger, Stateful, K>
   ) {
@@ -95,11 +95,11 @@ export class StateMachine<
     this.___context = context;
     this.history = [];
     if (Array.isArray(instructions)) {
-      this.___instructions = new Instruction(instructions);
+      this.___instructions = new InstructionMap(instructions);
     } else if ("___instructions" in instructions) {
       this.___instructions = instructions;
     } else {
-      this.___instructions = new Instruction(instructions);
+      this.___instructions = new InstructionMap(instructions);
     }
     this.___cache = null;
     this.___config = {
@@ -120,7 +120,7 @@ export class StateMachine<
     return this.___instructions.states;
   }
 
-  get transitions(): InstructionMap<State, Trigger, Context> {
+  get transitions(): InstructionDict<State, Trigger, Context> {
     return this.___instructions.transitions;
   }
 
@@ -595,8 +595,8 @@ export function soter<
 >(
   context: Context,
   instructions:
-    | Instruction<State, Trigger, Context>
     | InstructionMap<State, Trigger, Context>
+    | InstructionDict<State, Trigger, Context>
     | StateList<State>,
   options?: StateMachineOptions<
     Context,

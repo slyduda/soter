@@ -1,4 +1,4 @@
-import { InstructionMap } from "../src";
+import { InstructionDict } from "../src";
 
 export type MatterState = "solid" | "liquid" | "gas" | "plasma";
 export type MatterTrigger =
@@ -33,7 +33,7 @@ export class Matter {
   }
 }
 
-export const matterMachineDict: InstructionMap<
+export const matterMachineDict: InstructionDict<
   MatterState,
   MatterTrigger,
   Matter

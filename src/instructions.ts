@@ -1,4 +1,4 @@
-import { StateList, InstructionRecord, InstructionMap } from "./types";
+import { StateList, InstructionRecord, InstructionDict } from "./types";
 import { normalizeArray } from "./utils";
 
 function createTriggerKeys<State, Trigger extends string>(
@@ -7,7 +7,7 @@ function createTriggerKeys<State, Trigger extends string>(
   return states.map((state) => `to_${state}` as Trigger);
 }
 
-export class Instruction<
+export class InstructionMap<
   State,
   Trigger extends string = string,
   Context = {}
@@ -15,7 +15,7 @@ export class Instruction<
   ___instructions = true;
 
   constructor(
-    instructions: InstructionMap<State, Trigger, Context> | StateList<State>
+    instructions: InstructionDict<State, Trigger, Context> | StateList<State>
   ) {
     super();
     const instruct = Array.isArray(instructions)
@@ -45,14 +45,14 @@ export class Instruction<
     return new Array(...states);
   }
 
-  get transitions(): InstructionMap<State, Trigger, Context> {
-    const instructions: Partial<InstructionMap<State, Trigger, Context>> = {};
+  get transitions(): InstructionDict<State, Trigger, Context> {
+    const instructions: Partial<InstructionDict<State, Trigger, Context>> = {};
 
     for (const [trigger, transitions] of this.entries()) {
       instructions[trigger as Trigger] = transitions;
     }
 
-    return instructions as InstructionMap<State, Trigger, Context>;
+    return instructions as InstructionDict<State, Trigger, Context>;
   }
 
   addTransition(
@@ -61,7 +61,7 @@ export class Instruction<
       | InstructionRecord<State, Trigger, Context>
       | InstructionRecord<State, Trigger, Context>[],
     index?: number
-  ): Instruction<State, Trigger, Context> {
+  ): InstructionMap<State, Trigger, Context> {
     const transitions = this.get(trigger);
     if (transitions) {
       const normalizedTransitions = normalizeArray(transition);
@@ -79,7 +79,7 @@ export class Instruction<
 
   addState(
     state: State | StateList<State>
-  ): Instruction<State, Trigger, Context> {
+  ): InstructionMap<State, Trigger, Context> {
     // If there is a single intersection of a state. Prevent all new states from being added
     if (normalizeArray(state).every((state) => this.states.includes(state)))
       return this;
@@ -109,7 +109,7 @@ export class Instruction<
 
   private ___generateInstructions(
     states: StateList<State>
-  ): InstructionMap<State, Trigger, Context> {
+  ): InstructionDict<State, Trigger, Context> {
     const instructions: Partial<
       Record<Trigger, InstructionRecord<State, Trigger, Context>>
     > = {};
@@ -126,7 +126,7 @@ export class Instruction<
       };
     }
 
-    return instructions as InstructionMap<State, Trigger, Context>;
+    return instructions as InstructionDict<State, Trigger, Context>;
   }
 }
 
@@ -135,7 +135,7 @@ export const instructions = <
   Trigger extends string = string,
   Context = {}
 >(
-  instructions: InstructionMap<State, Trigger, Context> | StateList<State>
+  instructions: InstructionDict<State, Trigger, Context> | StateList<State>
 ) => {
-  return new Instruction(instructions);
+  return new InstructionMap(instructions);
 };

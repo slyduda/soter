@@ -1,4 +1,4 @@
-import { InstructionMap } from "../src";
+import { InstructionDict } from "../src";
 
 export type MatterState = "solid" | "liquid" | "gas" | "plasma";
 export type MatterTrigger = "melt";

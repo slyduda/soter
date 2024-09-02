@@ -49,7 +49,7 @@ class Matter {
   }
 }
 
-const matterMachineDict: InstructionMap<MatterState, MatterTrigger, Matter> = {
+const matterMachineDict: InstructionDict<MatterState, MatterTrigger, Matter> = {
   melt: { origins: "solid", destination: "liquid" },
   evaporate: { origins: "liquid", destination: "gas" },
   sublimate: { origins: "solid", destination: "gas" },
@@ -144,7 +144,7 @@ console.log(matter.state); // liquid
 In most use cases where finite state machines are needed, it is often helpful to have additional logic that happens before, during, and after transitions. This is where the `.trigger()` method is helpful.
 
 ```ts
-import { InstructionMap } from "@olympos/soter";
+import { InstructionDict } from "@olympos/soter";
 
 type HeroState = "idle" | "sleeping";
 type HeroTrigger = "patrol" | "sleep";
@@ -168,7 +168,7 @@ class Hero {
   }
 }
 
-const InstructionMap: InstructionMap<HeroState, HeroTrigger, Hero> = {
+const InstructionDict: InstructionDict<HeroState, HeroTrigger, Hero> = {
   patrol: {
     origins: "idle",
     destination: "idle",
@@ -181,7 +181,7 @@ const InstructionMap: InstructionMap<HeroState, HeroTrigger, Hero> = {
   },
 };
 
-const hero = soter(new Hero("idle"), InstructionMap);
+const hero = soter(new Hero("idle"), InstructionDict);
 hero.trigger("patrol");
 // The hero is expending energy!
 hero.trigger("patrol"); // No log because condition is not met so the hero does not work
@@ -210,7 +210,7 @@ export class Matter {
   }
 }
 
-export const matterMachineDict: InstructionMap<
+export const matterMachineDict: InstructionDict<
   MatterState,
   MatterTrigger,
   Matter
@@ -284,7 +284,7 @@ export class ExampleObject {
   }
 }
 
-export const exampleMachineDict: InstructionMap<
+export const exampleMachineDict: InstructionDict<
   ExampleObjectState,
   ExampleObjectTrigger,
   ExampleObject

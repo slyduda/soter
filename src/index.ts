@@ -2,7 +2,7 @@ import { instructions } from "./instructions";
 import { soter, StateMachine } from "./machine";
 import type {
   InstructionRecord,
-  InstructionMap,
+  InstructionDict,
   TransitionResult,
   TransitionOptions,
   StateMachineOptions,
@@ -12,7 +12,7 @@ export {
   soter,
   StateMachine,
   InstructionRecord,
-  InstructionMap,
+  InstructionDict,
   TransitionOptions,
   TransitionResult,
   StateMachineOptions,
