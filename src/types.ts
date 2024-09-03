@@ -14,15 +14,26 @@ export type ErrorName =
 // InstructionRecord failures from typeguards and exceptions will be how we handle string types
 type Effect<Context> = keyof Context | (string & {});
 type Condition<Context> = keyof Context | (string & {});
+type Prepare<Context> = keyof Context | (string & {});
+type Before<Context> = keyof Context | (string & {});
+type After<Context> = keyof Context | (string & {});
+type Exception<Context> = keyof Context | (string & {});
 
 export const isFunction = (obj: unknown): obj is CallableFunction =>
   obj instanceof Function;
 
+// If changing the functionality of the Instruction Record:
+// Make sure that the InstructionMap initializer handles deep copying correctly
+// Example: If changing anything to () => void, a better deep copy must be made
 export type InstructionRecord<State, Trigger = string, Context = {}> = {
   origins: State | State[];
   destination: State;
   conditions?: Condition<Context> | Condition<Context>[];
   effects?: Effect<Context> | Effect<Context>[];
+  onPrepare?: Prepare<Context> | Prepare<Context>[];
+  onBefore?: Before<Context> | Before<Context>[];
+  onAfter?: After<Context> | After<Context>[];
+  onException?: Exception<Context> | Exception<Context>[];
 };
 export type InstructionDict<
   State,
@@ -96,16 +107,34 @@ export type StateMachineOptions<
   verbose?: boolean;
   throwExceptions?: boolean;
   strictOrigins?: boolean;
+  instructionScope?: "global" | "local";
   conditionEvaluator?: (conditionFunction: any, context: Context) => boolean;
-  onBeforeTransition?: (
+  onPrepare?: (
     plannedState: State,
     state: State,
     context: Context,
     self: StateMachine<any, State, string, Stateful, K>
   ) => void;
-  onTransition?: (
+  onBefore?: (
+    plannedState: State,
+    state: State,
+    context: Context,
+    self: StateMachine<any, State, string, Stateful, K>
+  ) => void;
+  onAfter?: (
     state: State,
     oldState: State,
+    context: Context,
+    self: StateMachine<any, State, string, Stateful, K>
+  ) => void;
+  onException?: (
+    attemptedState: State,
+    state: State,
+    precontext: Context,
+    context: Context,
+    self: StateMachine<any, State, string, Stateful, K>
+  ) => void;
+  onReset?: (
     context: Context,
     self: StateMachine<any, State, string, Stateful, K>
   ) => void;
@@ -122,6 +151,7 @@ export type StateMachineInternalOptions<
   verbose?: boolean;
   throwExceptions?: boolean;
   strictOrigins?: boolean;
+  instructionScope?: "global" | "local";
   conditionEvaluator?: (conditionFunction: any, context: Context) => boolean;
   contextCopier?: (context: Context) => Context | any;
   getState: <Context extends Stateful>(
@@ -133,15 +163,32 @@ export type StateMachineInternalOptions<
     state: State,
     key: keyof Stateful
   ) => void;
-  onBeforeTransition?: (
+  onPrepare?: (
     plannedState: State,
     state: State,
     context: Context,
     self: StateMachine<any, State, string, Stateful, K>
   ) => void;
-  onTransition?: (
+  onBefore?: (
+    plannedState: State,
+    state: State,
+    context: Context,
+    self: StateMachine<any, State, string, Stateful, K>
+  ) => void;
+  onAfter?: (
     state: State,
     oldState: State,
+    context: Context,
+    self: StateMachine<any, State, string, Stateful, K>
+  ) => void;
+  onException?: (
+    attemptedState: State,
+    state: State,
+    precontext: Context,
+    context: Context,
+    self: StateMachine<any, State, string, Stateful, K>
+  ) => void;
+  onReset?: (
     context: Context,
     self: StateMachine<any, State, string, Stateful, K>
   ) => void;
@@ -169,23 +216,113 @@ export type StateMachineConfig<
     state: State,
     key: keyof Stateful
   ) => void;
-  onBeforeTransition: (
+  onPrepare: (
     plannedState: State,
     state: State,
     context: Context,
     self: StateMachine<any, State, string, Stateful, K>
   ) => void;
-  onTransition: (
+  onBefore: (
+    plannedState: State,
+    state: State,
+    context: Context,
+    self: StateMachine<any, State, string, Stateful, K>
+  ) => void;
+  onAfter: (
     state: State,
     oldState: State,
     context: Context,
     self: StateMachine<any, State, string, Stateful, K>
   ) => void;
+  onException: (
+    attemptedState: State,
+    state: State,
+    precontext: Context,
+    context: Context,
+    self: StateMachine<any, State, string, Stateful, K>
+  ) => void;
+  onReset: (
+    context: Context,
+    self: StateMachine<any, State, string, Stateful, K>
+  ) => void;
 };
 
-export type TransitionOptions<Context> = {
-  onError?: (context: Context, precontext: Context) => void;
+export type TransitionOptions<
+  Context,
+  State,
+  Trigger,
+  Stateful,
+  K extends keyof Stateful
+> = {
+  onPrepare?:
+    | ((
+        plannedState: State,
+        state: State,
+        context: Context,
+        self: StateMachine<any, State, string, Stateful, K>
+      ) => void)
+    | null;
+  onBefore?:
+    | ((
+        plannedState: State,
+        state: State,
+        context: Context,
+        self: StateMachine<any, State, string, Stateful, K>
+      ) => void)
+    | null;
+  onAfter?:
+    | ((
+        state: State,
+        oldState: State,
+        context: Context,
+        self: StateMachine<any, State, string, Stateful, K>
+      ) => void)
+    | null;
+  onException?:
+    | ((
+        attemptedState: State,
+        state: State,
+        precontext: Context,
+        context: Context,
+        self: StateMachine<any, State, string, Stateful, K>
+      ) => void)
+    | null;
   throwExceptions?: boolean;
+};
+
+export type ConsolidatedOptions<
+  Context,
+  State,
+  Trigger,
+  Stateful,
+  K extends keyof Stateful
+> = {
+  throwExceptions: boolean;
+  onPrepare: (
+    plannedState: State,
+    state: State,
+    context: Context,
+    self: StateMachine<any, State, string, Stateful, K>
+  ) => void;
+  onBefore: (
+    plannedState: State,
+    state: State,
+    context: Context,
+    self: StateMachine<any, State, string, Stateful, K>
+  ) => void;
+  onAfter: (
+    state: State,
+    oldState: State,
+    context: Context,
+    self: StateMachine<any, State, string, Stateful, K>
+  ) => void;
+  onException: (
+    attemptedState: State,
+    state: State,
+    precontext: Context,
+    context: Context,
+    self: StateMachine<any, State, string, Stateful, K>
+  ) => void;
 };
 
 export type TransitionProps = {};

@@ -1,4 +1,4 @@
-import { instructions } from "./instructions";
+import { instructions, InstructionMap } from "./instructions";
 import { soter, StateMachine } from "./machine";
 import type {
   InstructionRecord,
@@ -12,6 +12,7 @@ export {
   soter,
   instructions,
   StateMachine,
+  InstructionMap,
   InstructionRecord,
   InstructionDict,
   TransitionOptions,

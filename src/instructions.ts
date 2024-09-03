@@ -15,7 +15,10 @@ export class InstructionMap<
   ___global: boolean;
 
   constructor(
-    instructions: InstructionDict<State, Trigger, Context> | StateList<State>,
+    instructions:
+      | InstructionMap<State, Trigger, Context>
+      | InstructionDict<State, Trigger, Context>
+      | StateList<State>,
     global?: boolean
   ) {
     super();
@@ -24,11 +27,29 @@ export class InstructionMap<
       ? this.___generateInstructions(instructions)
       : instructions;
 
-    for (const [trigger, transition] of Object.entries<
-      | InstructionRecord<State, Trigger, Context>
-      | InstructionRecord<State, Trigger, Context>[]
-    >(instruct)) {
-      this.set(trigger, normalizeArray(transition));
+    if (Array.isArray(instructions)) {
+      const instruct = this.___generateInstructions(instructions);
+      for (const [trigger, transition] of Object.entries<
+        | InstructionRecord<State, Trigger, Context>
+        | InstructionRecord<State, Trigger, Context>[]
+      >(instruct)) {
+        this.set(trigger, normalizeArray(transition));
+      }
+    } else if ("___global" in instructions) {
+      for (const [trigger, transition] of instructions) {
+        this.set(
+          trigger,
+          transition.map((trans) => ({ ...trans }))
+        );
+      }
+    } else {
+      const instruct = instructions;
+      for (const [trigger, transition] of Object.entries<
+        | InstructionRecord<State, Trigger, Context>
+        | InstructionRecord<State, Trigger, Context>[]
+      >(instruct)) {
+        this.set(trigger, normalizeArray(transition));
+      }
     }
   }
 

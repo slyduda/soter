@@ -2,6 +2,8 @@
 
 `Soter` is a lightweight, object-oriented finite state machine implementation in Javascript. `Soter` has zero-dependencies and is useful for both frontend and backend applications.
 
+`Soter`'s API will be changing over time. It is likely that there will be breaking changes among minor releases (0.1.0 -> 0.2.0 etc) because we are gathering input from others who find the package helpful. An example of one of the largest forseeable breaks is the soter() API and allowing it to be called without an object where merge() or another more detailed API will substitute the existing soter() API. Though it is probably that we will be able to leverage Typescript in supporting the use of soter() for both use cases.
+
 ## Installation
 
 ```
@@ -69,7 +71,7 @@ A state machine is a model of behavior composed of a finite number of states and
 
 - `State`: A condition or stage in a state machine. A `State` can describe a phase in a process or a mode of behavior.
 
-- `InstructionRecord`: A process or event that causes the state machine to change from one state to another.
+- `Transition`: A process or event that causes the state machine to change from one state to another.
 
 - `Model`: An entity that gets updated during transitions. It may also define actions that will be executed during transitions. This is also described as context.
 
@@ -106,7 +108,7 @@ const matter = new Matter("solid");
 You can create a very simple working state machine bound to `matter` like this:
 
 ```ts
-import {} from "@olympos/soter";
+import { soter } from "@olympos/soter";
 
 const matterMachine = soter(matter, ["solid", "liquid"]);
 ```
@@ -122,7 +124,9 @@ Calling `machine` on `matter` creates `matterMachine` which includes all of the 
 
 ## Transitions
 
-### .to(state: State)
+In order to get the benefit of `Soter` with your objects local state. It is imperative to use `Soter`'s builtin functionality to call all conditions, effects, and callbacks within your instance. Changing the state of the object directly will not have any effect on `Soter` because it explicity avoids adding any functionality on top of the already existing object.
+
+### .to(state: State, options?: TransitionOptions)
 
 The `.to()` method is helpful for simple state transitions as demonstrated in the last example. Simply supply a state and if it exists transition to it without any checks or side effects.
 
@@ -139,7 +143,7 @@ matter.to("liquid");
 console.log(matter.state); // liquid
 ```
 
-### .trigger(trigger: Trigger, options?: TransitionOptions)
+### .trigger(trigger: Trigger, props: any, options?: TransitionOptions)
 
 In most use cases where finite state machines are needed, it is often helpful to have additional logic that happens before, during, and after transitions. This is where the `.trigger()` method is helpful.
 
@@ -358,3 +362,21 @@ Destructured for simpler design:
 ```ts
 const { success, failure } = objectMachine.trigger("walk");
 ```
+
+## TODO
+
+- Update Readme with the new API: soter vs addStateMachine, instructions, etc
+- Add better lifecycles for StateMachine, TransitionRecords, and Lifecycles
+  - [ ] ~~state.onExit~~
+  - [ ] ~~state.onEnter~~
+- Allow separate lifecycle events for FSM and transitions?
+- Allow soter() to remove Context from first param
+  - Doable by making instructions not have the state key and requiring Context to have the state key
+  - Might make refactor to use any property for state more difficult in the future (if it ever happens)
+- Configurable .state key? .status, .otherState, etc
+  - Might be too difficult to do with TS
+- Hiearchical State Machine
+- Visualization Tool
+- Some Absctraction
+  - Trigger Function Abstraction for Errors
+  - Instruction Initialization
